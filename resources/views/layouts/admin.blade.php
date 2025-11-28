@@ -3,75 +3,201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Admin | Kantin Kejujuran</title>
+    <title>@yield('title', 'Dashboard Admin | Kantin Kejujuran')</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-gray-100 text-gray-800 flex min-h-screen">
+<body class="bg-gray-100 text-gray-800">
 
-    <!-- Sidebar -->
+<div class="flex min-h-screen">
+
+    {{-- SIDEBAR KIRI FULL --}}
     <aside id="sidebar"
-           class="bg-[#009688] w-64 p-5 space-y-4 text-white fixed h-full z-50 transform -translate-x-full md:translate-x-0 transition-transform duration-300">
-        <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-bold">Admin Panel</h2>
-            <button id="closeSidebar" class="md:hidden text-white text-2xl">&times;</button>
+           class="bg-[#009688] w-64 p-5 text-white h-screen fixed left-0 top-0 z-50
+                  flex flex-col transition-all duration-300">
+
+        <div class="flex items-center justify-between mb-8">
+            <h2 class="text-xl font-bold tracking-wide">Admin Panel</h2>
         </div>
 
-        <nav class="space-y-2">
-            <a href="{{ route('admin.dashboard') }}" class="block px-4 py-2 rounded-lg hover:bg-[#00796B]">🏠 Dashboard</a>
-            <a href="#" class="block px-4 py-2 rounded-lg hover:bg-[#00796B]">📦 Barang Masuk</a>
-            <a href="#" class="block px-4 py-2 rounded-lg hover:bg-[#00796B]">🚚 Barang Keluar</a>
-            <a href="#" class="block px-4 py-2 rounded-lg hover:bg-[#00796B]">👥 Pengguna</a>
-            <a href="#" class="block px-4 py-2 rounded-lg hover:bg-[#00796B]">⚙️ Pengaturan</a>
+        <nav class="space-y-2 text-sm font-medium flex-1">
+            {{-- Dashboard --}}
+            <a href="{{ route('admin.dashboard') }}"
+            class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-[#00796B] transition
+                    {{ request()->routeIs('admin.dashboard') ? 'bg-[#00796B]' : '' }}">
+                🏠 Dashboard
+            </a>
+
+            {{-- Produk Masuk --}}
+            <a href="{{ route('admin.produk.lihat') }}"
+            class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-[#00796B] transition
+                    {{ request()->routeIs('admin.produk.*') ? 'bg-[#00796B]' : '' }}">
+                📦 Produk
+            </a>
+
+
+            {{-- Penjualan --}}
+            <a href="{{ route('admin.penjualan') }}"
+            class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-[#00796B] transition
+                    {{ request()->routeIs('admin.penjualan') ? 'bg-[#00796B]' : '' }}">
+                💰 Penjualan
+            </a>
+
+            {{-- Pengguna --}}
+            <a href="{{ route('admin.pengguna') }}"
+            class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-[#00796B] transition
+                    {{ request()->routeIs('admin.pengguna') ? 'bg-[#00796B]' : '' }}">
+                👥 Pengguna
+            </a>
+
+            {{-- Pengaturan --}}
+            <a href="{{ route('admin.pengaturan') }}"
+            class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-[#00796B] transition
+                    {{ request()->routeIs('admin.pengaturan') ? 'bg-[#00796B]' : '' }}">
+                ⚙️ Pengaturan
+            </a>
         </nav>
     </aside>
 
-    <!-- Overlay (Mobile only) -->
+    {{-- OVERLAY (untuk mobile ketika sidebar dibuka) --}}
     <div id="overlay"
-         class="fixed inset-0 bg-black bg-opacity-50 hidden md:hidden z-40"></div>
+         class="fixed inset-0 bg-black bg-opacity-40 z-40 hidden"></div>
 
-    <!-- Main Content -->
-    <div class="flex-1 md:ml-64 w-full">
-        <!-- Navbar -->
-        <header class="bg-[#FFD600] text-[#004D40] flex justify-between items-center p-4 shadow-md">
-            <button id="openSidebar" class="md:hidden text-2xl font-bold">&#9776;</button>
-            <h1 class="text-xl font-semibold">Dashboard Admin</h1>
+    @php
+        $admin      = auth('admin')->user();
+        $adminName  = $admin->name  ?? 'Admin Kantin';
+        $adminEmail = $admin->email ?? 'admin@example.com';
 
-            {{-- FORM LOGOUT --}}
-            <form action="{{ route('admin.logout') }}" method="POST">
-                @csrf
-                <button type="submit"
-                        class="bg-[#009688] text-white px-4 py-1 rounded-lg hover:bg-[#00796B]">
-                    Logout
+        // Kalau punya kolom foto di tabel admin, ganti $admin->photo
+        $avatarUrl  = ($admin && isset($admin->photo) && $admin->photo)
+            ? asset('storage/' . $admin->photo)
+            : 'https://ui-avatars.com/api/?name=' . urlencode($adminName) . '&background=009688&color=fff';
+    @endphp
+
+    {{-- BAGIAN KANAN: NAVBAR + KONTEN --}}
+    <div id="mainContent"
+         class="flex-1 flex flex-col min-h-screen ml-64 transition-all duration-300">
+
+        {{-- NAVBAR PUTIH --}}
+        <header class="bg-white shadow-sm border-b px-6 py-3 sticky top-0 z-30 flex items-center justify-between">
+
+            {{-- Kiri: tombol sidebar + judul --}}
+            <div class="flex items-center gap-4">
+                <button id="toggleSidebar" class="text-2xl text-gray-700">
+                    ☰
                 </button>
-            </form>
+                <h1 class="text-lg md:text-xl font-semibold text-gray-800">
+                    @yield('title', 'Dashboard Admin')
+                </h1>
+            </div>
+
+            {{-- Kanan: info admin + avatar + dropdown --}}
+            <div class="relative flex items-center gap-3">
+                <div class="hidden md:flex flex-col items-end leading-tight">
+                    <span class="text-sm font-semibold text-gray-800">
+                        {{ $adminName }}
+                    </span>
+                    <span class="text-xs text-gray-500">Administrator</span>
+                </div>
+
+                {{-- Foto profil --}}
+                <button id="profileBtn"
+                        class="w-10 h-10 rounded-full overflow-hidden border border-gray-300 shadow">
+                    <img src="{{ $avatarUrl }}" alt="Foto Profil" class="w-full h-full object-cover">
+                </button>
+
+                {{-- DROPDOWN PROFIL + LOGOUT --}}
+                <div id="profileDropdown"
+                     class="absolute right-0 top-12 w-48 bg-white shadow-lg border rounded-lg py-2 hidden">
+
+                    <div class="px-4 py-3 border-b">
+                        <p class="font-semibold text-gray-800 text-sm">
+                            {{ $adminName }}
+                        </p>
+                        <p class="text-xs text-gray-500">
+                            {{ $adminEmail }}
+                        </p>
+                    </div>
+
+                    <a href="#"
+                       class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                        Profil
+                    </a>
+
+                    <form action="{{ route('admin.logout') }}" method="POST">
+                        @csrf
+                        <button type="submit"
+                                class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
+                            Logout
+                        </button>
+                    </form>
+                </div>
+            </div>
         </header>
 
-
-        <main class="p-6">
+        {{-- KONTEN --}}
+        <main class="flex-1 p-4 md:p-6">
             @yield('content')
         </main>
     </div>
+</div>
 
-    <script>
-        const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('overlay');
-        const openBtn = document.getElementById('openSidebar');
-        const closeBtn = document.getElementById('closeSidebar');
+<script>
+    const sidebar         = document.getElementById('sidebar');
+    const mainContent     = document.getElementById('mainContent');
+    const toggleBtn       = document.getElementById('toggleSidebar');
+    const overlay         = document.getElementById('overlay');
+    const profileBtn      = document.getElementById('profileBtn');
+    const profileDropdown = document.getElementById('profileDropdown');
 
-        openBtn.addEventListener('click', () => {
-            sidebar.classList.remove('-translate-x-full');
-            overlay.classList.remove('hidden');
+    // === TOGGLE SIDEBAR (ikon ☰) ===
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', () => {
+            const isHidden = sidebar.classList.toggle('hidden');
+            mainContent.classList.toggle('ml-64');
+
+            // overlay hanya dipakai di layar kecil
+            if (window.innerWidth < 768) {
+                if (!isHidden) {
+                    overlay.classList.remove('hidden');
+                } else {
+                    overlay.classList.add('hidden');
+                }
+            }
         });
+    }
 
-        closeBtn.addEventListener('click', () => {
-            sidebar.classList.add('-translate-x-full');
-            overlay.classList.add('hidden');
-        });
-
+    // Klik overlay menutup sidebar di mobile
+    if (overlay) {
         overlay.addEventListener('click', () => {
-            sidebar.classList.add('-translate-x-full');
+            sidebar.classList.add('hidden');
+            mainContent.classList.remove('ml-64');
             overlay.classList.add('hidden');
         });
-    </script>
+    }
+
+    // Pastikan di desktop awalnya sidebar terlihat & konten bergeser
+    window.addEventListener('load', () => {
+        if (window.innerWidth >= 768) {
+            sidebar.classList.remove('hidden');
+            mainContent.classList.add('ml-64');
+        }
+    });
+
+    // === DROPDOWN PROFIL (Profil + Logout) ===
+    if (profileBtn && profileDropdown) {
+        profileBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            profileDropdown.classList.toggle('hidden');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!profileDropdown.classList.contains('hidden') &&
+                !profileDropdown.contains(e.target)) {
+                profileDropdown.classList.add('hidden');
+            }
+        });
+    }
+</script>
+
 </body>
 </html>
