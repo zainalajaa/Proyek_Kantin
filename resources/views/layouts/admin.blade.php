@@ -36,7 +36,7 @@
 
 
             {{-- Penjualan --}}
-            <a href="{{ route('admin.penjualan') }}"
+            <a href="{{ route('admin.penjualan.index') }}"
             class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-[#00796B] transition
                     {{ request()->routeIs('admin.penjualan') ? 'bg-[#00796B]' : '' }}">
                 💰 Penjualan
