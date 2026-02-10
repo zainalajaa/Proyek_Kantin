@@ -98,7 +98,14 @@ class ProdukController extends Controller
 
         return view('publik.index', compact('produks'));
     }
+        // keranjang checkout produk
+        public function publikCheckout()
+    {
+        $produks = Produk::paginate(20);
+        $cartCount = session('cart_count', 0); // atau hitung dari tabel cart user
 
+        return view('publik.daftar-produk', compact('produks', 'cartCount'));
+    }
 
 
 }

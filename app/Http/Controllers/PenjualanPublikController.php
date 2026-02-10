@@ -7,62 +7,29 @@ use App\Models\Penjualan;
 use App\Models\PenjualanDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
 
 class PenjualanPublikController extends Controller
 {
+    /**
+     * Membuat transaksi baru saat klik BELI produk
+     */
     public function beli(Request $request, $id)
     {
-        $request->validate([
-            'metode' => 'required|in:tunai,qris',
-        ]);
-
-        // Ambil produk
-        $produk = Produk::findOrFail($id);
+        $produk = Produk::where('id_produk', $id)->firstOrFail();
 
         if ($produk->stok <= 0) {
-            return back()->with('error', 'Stok habis.');
+            return back()->with('error', 'Stok produk habis.');
         }
 
-        if ($request->metode === 'qris') {
-            // Proses instant (QRIS) -> kurangi stok langsung dan tandai sukses
-            DB::beginTransaction();
-            try {
-                // kurangi stok
-                $produk->decrement('stok');
-
-                $penjualan = Penjualan::create([
-                    'waktu'             => now(),
-                    'total_harga'       => $produk->harga,
-                    'metode_pembayaran' => 'qris',
-                    'status'            => 'sukses',
-                ]);
-
-                PenjualanDetail::create([
-                    'id_penjualan' => $penjualan->id,
-                    'id_produk'    => $produk->id_produk,
-                    'nama_produk'  => $produk->nama_produk,
-                    'harga_satuan' => $produk->harga,
-                    'jumlah'       => 1,
-                    'subtotal'     => $produk->harga,
-                ]);
-
-                DB::commit();
-                return back()->with('success', 'Pembelian berhasil via QRIS.');
-            } catch (\Throwable $e) {
-                DB::rollBack();
-                report($e);
-                return back()->with('error', 'Terjadi kesalahan saat memproses pembelian.');
-            }
-        }
-
-        // Jika tunai -> buat transaksi pending dan redirect ke halaman input jumlah bayar
         DB::beginTransaction();
+
         try {
             $penjualan = Penjualan::create([
                 'waktu'             => now(),
                 'total_harga'       => $produk->harga,
                 'metode_pembayaran' => 'tunai',
-                'status'            => 'pending', // belum dibayar
+                'status'            => 'pending',
             ]);
 
             PenjualanDetail::create([
@@ -76,21 +43,24 @@ class PenjualanPublikController extends Controller
 
             DB::commit();
 
-            // redirect ke halaman tunai (form input jumlah bayar)
             return redirect()->route('publik.tunai.detail', $penjualan->id);
+
         } catch (\Throwable $e) {
             DB::rollBack();
             report($e);
+
             return back()->with('error', 'Terjadi kesalahan saat memproses pembelian.');
         }
     }
 
-    // Menampilkan halaman detail pembayaran tunai
+    /**
+     * Menampilkan halaman detail checkout
+     */
     public function tunaiDetail(Penjualan $penjualan)
     {
-        // Pastikan ini transaksi tunai & pending
-        if ($penjualan->metode_pembayaran !== 'tunai' || $penjualan->status !== 'pending') {
-            return redirect()->route('publik.index')->with('error', 'Transaksi tidak valid untuk pembayaran tunai.');
+        if ($penjualan->status !== 'pending') {
+            return redirect()->route('publik.index')
+                ->with('error', 'Transaksi tidak valid untuk pembayaran.');
         }
 
         $details = $penjualan->details()->get();
@@ -98,54 +68,196 @@ class PenjualanPublikController extends Controller
         return view('publik.tunai_detail', compact('penjualan', 'details'));
     }
 
-    // Proses akhir pembayaran tunai
-    public function tunaiBayar(Request $request, Penjualan $penjualan)
+
+    public function tambahProduk(Request $request, Penjualan $penjualan)
     {
         $request->validate([
-            'jumlah_bayar' => 'required|integer|min:0',
+            'id_produk' => 'required'
         ]);
 
-        // Pastikan masih pending dan metode tunai
-        if ($penjualan->metode_pembayaran !== 'tunai' || $penjualan->status !== 'pending') {
-            return back()->with('error', 'Transaksi tidak valid.');
-        }
+        $produk = Produk::where('id_produk', $request->id_produk)->firstOrFail();
 
-        $jumlahBayar = (int) $request->jumlah_bayar;
-        $total = (int) $penjualan->total_harga;
-
-        if ($jumlahBayar < $total) {
-            return back()->with('error', 'Jumlah bayar kurang dari total.');
+        if ($produk->stok <= 0) {
+            return back()->with('error', 'Stok produk habis.');
         }
 
         DB::beginTransaction();
+
         try {
-            // kurangi stok sekarang (untuk tiap detail)
-            foreach ($penjualan->details as $det) {
-                $produk = Produk::where('id_produk', $det->id_produk)->first();
-                if (!$produk) {
-                    throw new \Exception("Produk tidak ditemukan.");
-                }
-                if ($produk->stok < $det->jumlah) {
-                    throw new \Exception("Stok produk '{$produk->nama_produk}' tidak mencukupi.");
-                }
-                $produk->decrement('stok', $det->jumlah);
+
+            // Cek apakah produk sudah ada di detail
+            $detail = $penjualan->details()
+                ->where('id_produk', $produk->id_produk)
+                ->first();
+
+            if ($detail) {
+                // Jika sudah ada, tambah qty
+                $detail->jumlah += 1;
+                $detail->subtotal = $detail->jumlah * $detail->harga_satuan;
+                $detail->save();
+            } else {
+                // Jika belum ada, buat detail baru
+                $penjualan->details()->create([
+                    'id_produk'    => $produk->id_produk,
+                    'nama_produk'  => $produk->nama_produk,
+                    'harga_satuan' => $produk->harga,
+                    'jumlah'       => 1,
+                    'subtotal'     => $produk->harga,
+                ]);
             }
 
-            // update penjualan
+            // Update total harga transaksi
+            $total = $penjualan->details()->sum('subtotal');
+
             $penjualan->update([
-                'paid_amount' => $jumlahBayar,
-                'paid_at'     => now(),
-                'status'      => 'sukses',
+                'total_harga' => $total
             ]);
 
             DB::commit();
 
-            $kembalian = $jumlahBayar - $total;
-            return redirect()->route('publik.index')->with('success', "Pembayaran sukses. Kembalian: Rp {$kembalian}");
+            return back()->with('success', 'Produk berhasil ditambahkan ke transaksi.');
+
         } catch (\Throwable $e) {
             DB::rollBack();
             report($e);
-            return back()->with('error', 'Terjadi kesalahan saat memproses pembayaran tunai: ' . $e->getMessage());
+
+            return back()->with('error', 'Gagal menambahkan produk.');
         }
     }
+
+    /**
+     * Proses tombol BAYAR atau KIRIM KE KERANJANG
+     */
+    public function bayar(Request $request, Penjualan $penjualan)
+    {
+        $action = $request->input('action', 'pay');
+
+        // ====== KIRIM KE KERANJANG ======
+        if ($action === 'cart') {
+            return $this->kirimKeKeranjang($request, $penjualan);
+        }
+
+        // ====== PROSES PEMBAYARAN ======
+        return $this->prosesPembayaran($request, $penjualan);
+    }
+
+    /**
+     * Fungsi kirim produk ke session keranjang
+     */
+    private function kirimKeKeranjang(Request $request, Penjualan $penjualan)
+    {
+        $itemsInput = $request->input('items', []);
+        $cart = Session::get('cartItems', []);
+
+        foreach ($itemsInput as $detailId => $row) {
+
+            $jumlah = max((int)($row['jumlah'] ?? 1), 1);
+
+            $detail = PenjualanDetail::find($detailId);
+
+            if (!$detail) continue;
+
+            $key = $detail->id_produk;
+
+            if (isset($cart[$key])) {
+                $cart[$key]['jumlah'] += $jumlah;
+            } else {
+                $cart[$key] = [
+                    'id_produk'    => $detail->id_produk,
+                    'nama_produk'  => $detail->nama_produk,
+                    'harga_satuan' => $detail->harga_satuan,
+                    'jumlah'       => $jumlah,
+                ];
+            }
+
+            $cart[$key]['subtotal'] =
+                $cart[$key]['jumlah'] * $cart[$key]['harga_satuan'];
+        }
+
+        Session::put('cartItems', $cart);
+        Session::put('cart_total', collect($cart)->sum('subtotal'));
+        Session::put('cart_count', collect($cart)->sum('jumlah'));
+
+
+        return redirect()
+            ->route('cart.index')
+            ->with('success', 'Produk berhasil dikirim ke keranjang.');
+    }
+
+    /**
+     * Proses utama pembayaran (Tunai / QRIS)
+     */
+    private function prosesPembayaran(Request $request, Penjualan $penjualan)
+    {
+        $metode = $request->input('metode_pembayaran', 'tunai');
+
+        DB::beginTransaction();
+
+        try {
+
+            $total = 0;
+
+            foreach ($penjualan->details as $detail) {
+
+                $qty = max((int)$request->items[$detail->id]['jumlah'], 1);
+
+                $detail->jumlah = $qty;
+                $detail->subtotal = $qty * $detail->harga_satuan;
+                $detail->save();
+
+                $total += $detail->subtotal;
+
+                $produk = Produk::where('id_produk', $detail->id_produk)
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($produk->stok < $qty) {
+                    throw new \Exception("Stok produk {$produk->nama_produk} tidak mencukupi.");
+                }
+            }
+
+            if ($metode === 'tunai') {
+
+                $request->validate([
+                    'jumlah_bayar' => 'required|integer|min:' . $total,
+                ]);
+
+                foreach ($penjualan->details as $detail) {
+                    Produk::where('id_produk', $detail->id_produk)
+                        ->decrement('stok', $detail->jumlah);
+                }
+
+                $penjualan->update([
+                    'total_harga'       => $total,
+                    'metode_pembayaran' => 'tunai',
+                    'paid_amount'       => $request->jumlah_bayar,
+                    'paid_at'           => now(),
+                    'status'            => 'sukses',
+                ]);
+
+                DB::commit();
+
+                return redirect()->route('publik.transaksi.selesai', $penjualan->id);
+
+            } else {
+
+                $penjualan->update([
+                    'total_harga'       => $total,
+                    'metode_pembayaran' => 'qris',
+                    'status'            => 'pending_qris',
+                ]);
+
+                DB::commit();
+
+                return redirect()->route('publik.qris.show', $penjualan->id);
+            }
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            report($e);
+
+            return back()->with('error', 'Terjadi kesalahan saat memproses pembayaran.');
+        }
+    }
+
 }

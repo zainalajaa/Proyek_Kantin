@@ -40,7 +40,6 @@
 
     {{-- Detail Produk --}}
     <h2 class="text-lg font-semibold mb-3">Detail Produk</h2>
-
     <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200 mb-4">
             <thead class="bg-gray-50 text-xs text-gray-700">

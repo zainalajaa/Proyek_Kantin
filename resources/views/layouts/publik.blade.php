@@ -43,32 +43,36 @@
                     </div>
                 </div>
 
-                {{-- Kanan: menu dan toggle mobile --}}
-                <div class="flex items-center gap-4">
-                    <ul id="navDesktop" class="hidden md:flex space-x-6 text-sm md:text-base">
-                        <li><a href="{{ route('publik.index') }}" class="hover:text-[#FDC500] transition">Home</a></li>
-                        <li><a href="#menu" class="hover:text-[#FDC500] transition">Menu</a></li>
-                        <li><a href="#tentang" class="hover:text-[#FDC500] transition">Tentang</a></li>
-                        <li><a href="#kontak" class="hover:text-[#FDC500] transition">Kontak</a></li>
-                    </ul>
+                {{-- Kanan: Icon Keranjang untuk checkout --}}
+                <div class="flex items-center">
+                    <a href="{{ route('cart.index') }}"
+                    class="relative inline-flex items-center justify-center h-10 w-10 rounded-full 
+                            bg-white/10 hover:bg-white/20 transition">
 
-                    {{-- Mobile menu button --}}
-                    <button id="mobileMenuBtn" class="md:hidden p-2 rounded-md hover:bg-black/10" aria-label="Toggle menu">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M4 8h16M4 16h16" />
+                        {{-- Icon keranjang (SVG, tanpa Font Awesome) --}}
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" 
+                            fill="currentColor" class="h-5 w-5 text-white">
+                            <path d="M2.25 2.25a.75.75 0 000 1.5h1.386c.17 0 .318.114.362.278l2.558 9.593A2.25 2.25 0 008.75 15h9.5a2.25 2.25 0 002.143-1.57l1.6-5A.75.75 0 0021.25 7.5h-14a.75.75 0 01-.727-.568L5.04 3.028A1.875 1.875 0 003.636 2.25H2.25z" />
+                            <path d="M8.25 18a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm8.25 0a1.5 1.5 0 100 3 1.5 1.5 0 000-3z" />
                         </svg>
-                    </button>
-                </div>
-            </div>
 
-            {{-- Mobile menu (hidden by default) --}}
-            <div id="mobileMenu" class="md:hidden hidden pb-4">
-                <ul class="flex flex-col space-y-2 text-sm">
-                    <li><a href="{{ route('publik.index') }}" class="block px-3 py-2 hover:bg-white/10 rounded">Home</a></li>
-                    <li><a href="#menu" class="block px-3 py-2 hover:bg-white/10 rounded">Menu</a></li>
-                    <li><a href="#tentang" class="block px-3 py-2 hover:bg-white/10 rounded">Tentang</a></li>
-                    <li><a href="#kontak" class="block px-3 py-2 hover:bg-white/10 rounded">Kontak</a></li>
-                </ul>
+                        {{-- Badge jumlah item --}}
+                        @php
+                            $cartCount = session('cart_count', 0);
+                        @endphp
+
+                        @if ($cartCount > 0)
+                            <span class="absolute -top-1 -right-1 
+                                        h-5 min-w-[1.25rem] px-1
+                                        flex items-center justify-center
+                                        rounded-full bg-[#FDC500]
+                                        text-[10px] font-bold text-[#1E293B]">
+                                {{ $cartCount }}
+                            </span>
+                        @endif
+                    </a>
+                </div>
+
             </div>
         </div>
     </nav>
@@ -101,31 +105,5 @@
     </footer>
 
     @stack('scripts')
-    <script>
-        // Mobile menu toggle
-        const menuBtn = document.getElementById('mobileMenuBtn');
-        const mobileMenu = document.getElementById('mobileMenu');
-
-        if (menuBtn && mobileMenu) {
-            menuBtn.addEventListener('click', () => {
-                mobileMenu.classList.toggle('hidden');
-            });
-        }
-
-        // Smooth scroll for anchors on the same page
-        document.querySelectorAll('a[href^="#"]').forEach(link => {
-            link.addEventListener('click', e => {
-                const target = document.querySelector(link.getAttribute('href'));
-                if (target) {
-                    e.preventDefault();
-                    target.scrollIntoView({ behavior: 'smooth' });
-                    // close mobile menu after click
-                    if (!mobileMenu.classList.contains('hidden')) {
-                        mobileMenu.classList.add('hidden');
-                    }
-                }
-            });
-        });
-    </script>
 </body>
 </html>
