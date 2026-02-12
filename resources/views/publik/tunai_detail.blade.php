@@ -286,16 +286,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const action = document.activeElement.value;
         const metode = document.querySelector('input[name="metode_pembayaran"]:checked').value;
 
+        
         if (action === 'pay' && metode === 'qris') {
-
-            e.preventDefault();
-
-            window.location.href =
-                "{{ route('publik.qris.show', $penjualan->id) }}" +
-                "?total=" + currentTotal;
-
-            return;
+            // Biarkan form submit normal ke controller
+            return true;
         }
+
 
         if (action === 'pay' && metode === 'tunai') {
 

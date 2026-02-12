@@ -7,9 +7,9 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ProdukController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\Admin\PenjualanController;
-
 use App\Http\Controllers\PenjualanPublikController;
 use App\Http\Controllers\PembayaranPublikController;
+use App\Http\Controllers\StockCheckController;
 
 
 /*
@@ -80,11 +80,22 @@ Route::prefix('admin')
 
 
         // HALAMAN TAMBAHAN ADMIN
-        Route::view('/pengguna', 'admin.pengguna')
-            ->name('pengguna');
+        // Route::view('/pengguna', 'admin.pengguna')
+        //     ->name('pengguna');
 
-        Route::view('/pengaturan', 'admin.pengaturan')
-            ->name('pengaturan');
+        // Route::view('/pengaturan', 'admin.pengaturan')
+        //     ->name('pengaturan');
+
+        Route::get('/monitoring-stock', [StockCheckController::class, 'index'])
+            ->name('monitoring_stok');
+
+        Route::post('/monitoring-stock', [StockCheckController::class, 'store'])
+            ->name('monitoring_stok.store');
+
+
+
+        Route::get('/monitoring-stock/riwayat',[StockCheckController::class, 'riwayat']
+            )->name('monitoring_stok.riwayat');
 });
 
 
@@ -163,3 +174,5 @@ Route::post('/pembayaran/{id}/qris',
 Route::get('/publik/transaksi/selesai/{id}', 
     [PembayaranPublikController::class, 'transaksiSelesai']
 )->name('publik.transaksi.selesai');
+
+

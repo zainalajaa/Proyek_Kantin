@@ -42,19 +42,19 @@
                 💰 Penjualan
             </a>
 
-            {{-- Pengguna --}}
-            <a href="{{ route('admin.pengguna') }}"
+            {{-- Monitoring Stok --}}
+            <a href="{{ route('admin.monitoring_stok') }}"
             class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-[#00796B] transition
-                    {{ request()->routeIs('admin.pengguna') ? 'bg-[#00796B]' : '' }}">
-                👥 Pengguna
+                    {{ request()->routeIs('admin.monitoring_stok') ? 'bg-[#00796B]' : '' }}">
+                👥 Monitoring Stok
             </a>
 
-            {{-- Pengaturan --}}
-            <a href="{{ route('admin.pengaturan') }}"
-            class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-[#00796B] transition
-                    {{ request()->routeIs('admin.pengaturan') ? 'bg-[#00796B]' : '' }}">
-                ⚙️ Pengaturan
+            <a href="{{ route('admin.monitoring_stok.riwayat') }}"
+            class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-[#00796B] transition">
+                📅 Riwayat Selisih Stok
             </a>
+
+
         </nav>
     </aside>
 

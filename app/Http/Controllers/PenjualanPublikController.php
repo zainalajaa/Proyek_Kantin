@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Produk;
+use App\Http\Controllers\Controller;
 use App\Models\Penjualan;
 use App\Models\PenjualanDetail;
+use App\Models\Produk;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
@@ -187,77 +188,112 @@ class PenjualanPublikController extends Controller
     /**
      * Proses utama pembayaran (Tunai / QRIS)
      */
-    private function prosesPembayaran(Request $request, Penjualan $penjualan)
-    {
-        $metode = $request->input('metode_pembayaran', 'tunai');
+private function prosesPembayaran(Request $request, Penjualan $penjualan)
+{
+    $metode = $request->input('metode_pembayaran', 'tunai');
 
-        DB::beginTransaction();
+    DB::beginTransaction();
 
-        try {
+    try {
 
-            $total = 0;
+        // Lock penjualan agar tidak race condition
+        $penjualan = Penjualan::with('details')
+            ->lockForUpdate()
+            ->findOrFail($penjualan->id);
 
-            foreach ($penjualan->details as $detail) {
-
-                $qty = max((int)$request->items[$detail->id]['jumlah'], 1);
-
-                $detail->jumlah = $qty;
-                $detail->subtotal = $qty * $detail->harga_satuan;
-                $detail->save();
-
-                $total += $detail->subtotal;
-
-                $produk = Produk::where('id_produk', $detail->id_produk)
-                    ->lockForUpdate()
-                    ->first();
-
-                if ($produk->stok < $qty) {
-                    throw new \Exception("Stok produk {$produk->nama_produk} tidak mencukupi.");
-                }
-            }
-
-            if ($metode === 'tunai') {
-
-                $request->validate([
-                    'jumlah_bayar' => 'required|integer|min:' . $total,
-                ]);
-
-                foreach ($penjualan->details as $detail) {
-                    Produk::where('id_produk', $detail->id_produk)
-                        ->decrement('stok', $detail->jumlah);
-                }
-
-                $penjualan->update([
-                    'total_harga'       => $total,
-                    'metode_pembayaran' => 'tunai',
-                    'paid_amount'       => $request->jumlah_bayar,
-                    'paid_at'           => now(),
-                    'status'            => 'sukses',
-                ]);
-
-                DB::commit();
-
-                return redirect()->route('publik.transaksi.selesai', $penjualan->id);
-
-            } else {
-
-                $penjualan->update([
-                    'total_harga'       => $total,
-                    'metode_pembayaran' => 'qris',
-                    'status'            => 'pending_qris',
-                ]);
-
-                DB::commit();
-
-                return redirect()->route('publik.qris.show', $penjualan->id);
-            }
-
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            report($e);
-
-            return back()->with('error', 'Terjadi kesalahan saat memproses pembayaran.');
+        if (!$request->has('items') || empty($request->items)) {
+            throw new \Exception("Data item tidak ditemukan.");
         }
+
+        // =========================
+        // UPDATE DETAIL & VALIDASI
+        // =========================
+        foreach ($penjualan->details as $detail) {
+
+            if (!isset($request->items[$detail->id]['jumlah'])) {
+                throw new \Exception("Jumlah produk tidak lengkap.");
+            }
+
+            $qty = (int)$request->items[$detail->id]['jumlah'];
+
+            if ($qty < 1) {
+                throw new \Exception("Jumlah produk tidak valid.");
+            }
+
+            // Cek stok dengan lock
+            $produk = Produk::where('id_produk', $detail->id_produk)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($produk->stok < $qty) {
+                throw new \Exception("Stok {$produk->nama_produk} tidak mencukupi.");
+            }
+
+            // Update detail
+            $detail->update([
+                'jumlah'   => $qty,
+                'subtotal' => $qty * $detail->harga_satuan
+            ]);
+        }
+
+        // =========================
+        // HITUNG TOTAL FINAL DARI DB
+        // =========================
+        $totalFinal = $penjualan->details()->sum('subtotal');
+
+        // =========================
+        // METODE TUNAI
+        // =========================
+        if ($metode === 'tunai') {
+
+            $request->validate([
+                'jumlah_bayar' => 'required|integer|min:' . $totalFinal,
+            ]);
+
+            // Kurangi stok
+            foreach ($penjualan->details as $detail) {
+                Produk::where('id_produk', $detail->id_produk)
+                    ->decrement('stok', $detail->jumlah);
+            }
+
+            $penjualan->update([
+                'total_harga'       => $totalFinal,
+                'metode_pembayaran' => 'tunai',
+                'paid_amount'       => $request->jumlah_bayar,
+                'paid_at'           => now(),
+                'status'            => 'sukses',
+            ]);
+
+        }
+        // =========================
+        // METODE QRIS
+        // =========================
+        else {
+
+            $penjualan->update([
+                'total_harga'       => $totalFinal,
+                'metode_pembayaran' => 'qris',
+                'paid_amount'       => null,
+                'paid_at'           => null,
+                'status'            => 'pending_qris',
+            ]);
+        }
+
+        DB::commit();
+
+        return $metode === 'tunai'
+            ? redirect()->route('publik.transaksi.selesai', $penjualan->id)
+            : redirect()->route('publik.qris.show', $penjualan->id);
+
+    } catch (\Throwable $e) {
+
+        DB::rollBack();
+        report($e);
+
+        return back()->with('error', 'Terjadi kesalahan saat memproses pembayaran.');
     }
+}
+
+
 
 }

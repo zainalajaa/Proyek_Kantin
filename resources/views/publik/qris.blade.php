@@ -9,10 +9,11 @@
 
         <h2 class="text-xl font-semibold mb-4">Pembayaran QRIS</h2>
 
+        {{-- TOTAL FIX DARI DATABASE --}}
         <p class="mb-3 text-sm">
             Total yang harus dibayar:
             <span class="font-bold text-blue-600 text-lg">
-                Rp {{ number_format($total,0,',','.') }}
+                Rp {{ number_format($penjualan->total_harga,0,',','.') }}
             </span>
         </p>
 

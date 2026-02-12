@@ -9,25 +9,21 @@ use Illuminate\Support\Facades\DB;
 
 class PembayaranPublikController extends Controller
 {
-    // Menampilkan halaman QRIS
-    public function showQris(Request $request, $id)
+    // ==============================
+    // HALAMAN QRIS
+    // ==============================
+    public function showQris($id)
     {
-        $penjualan = Penjualan::with('details.produk')->findOrFail($id);
+        $penjualan = Penjualan::with('details.produk')
+            ->findOrFail($id);
 
-        // Ambil total dari parameter URL jika ada
-        $total = $request->get('total');
+        // HITUNG TOTAL DARI DETAIL (SUM SUBTOTAL)
+        $total = $penjualan->details->sum(function ($detail) {
+            return $detail->jumlah * $detail->harga_satuan;
+        });
 
-        if ($total) {
-            // Update total di database agar sinkron
-            $penjualan->update([
-                'total_harga' => $total
-            ]);
-        } else {
-            // Kalau tidak ada, hitung manual
-            $total = $penjualan->details->sum(function($d) {
-                return $d->jumlah * $d->harga_satuan;
-            });
-
+        // Sinkronkan total di database (jika belum sama)
+        if ($penjualan->total_harga != $total) {
             $penjualan->update([
                 'total_harga' => $total
             ]);
@@ -39,29 +35,45 @@ class PembayaranPublikController extends Controller
         ]);
     }
 
-    // Tombol "Saya Sudah Membayar"
-    public function submitQris(Request $request, $id)
+    // ==============================
+    // KONFIRMASI QRIS
+    // ==============================
+    public function submitQris($id)
     {
         DB::beginTransaction();
 
         try {
 
-            $penjualan = Penjualan::with('details')->findOrFail($id);
+            $penjualan = Penjualan::with('details')
+                ->lockForUpdate()
+                ->findOrFail($id);
 
-            // HITUNG TOTAL SEMUA DETAIL
-            $totalReal = 0;
+            // HITUNG TOTAL REAL DARI DETAIL
+            $totalReal = $penjualan->details->sum(function ($detail) {
+                return $detail->jumlah * $detail->harga_satuan;
+            });
 
+            // VALIDASI STOK SEBELUM DIKURANGI
             foreach ($penjualan->details as $detail) {
-                $totalReal += $detail->jumlah * $detail->harga_satuan;
+
+                $produk = Produk::where('id_produk', $detail->id_produk)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                if ($produk->stok < $detail->jumlah) {
+                    throw new \Exception("Stok {$produk->nama_produk} tidak mencukupi.");
+                }
             }
 
-            // UPDATE TOTAL DI DATABASE
-            $penjualan->update([
-                'total_harga' => $totalReal
-            ]);
+            // KURANGI STOK
+            foreach ($penjualan->details as $detail) {
+                Produk::where('id_produk', $detail->id_produk)
+                    ->decrement('stok', $detail->jumlah);
+            }
 
-            // UPDATE STATUS
+            // UPDATE PENJUALAN (FINAL STATE)
             $penjualan->update([
+                'total_harga'       => $totalReal,
                 'metode_pembayaran' => 'qris',
                 'paid_amount'       => $totalReal,
                 'paid_at'           => now(),
@@ -73,21 +85,22 @@ class PembayaranPublikController extends Controller
             return redirect()->route('publik.transaksi.selesai', $penjualan->id);
 
         } catch (\Throwable $e) {
+
             DB::rollBack();
             report($e);
 
-            return back()->with('error', 'Terjadi kesalahan.');
+            return back()->with('error', 'Terjadi kesalahan saat memproses pembayaran QRIS.');
         }
     }
 
-
-
-    // Halaman selesai
+    // ==============================
+    // HALAMAN TRANSAKSI SELESAI
+    // ==============================
     public function transaksiSelesai($id)
     {
-        $penjualan = Penjualan::with('details')->findOrFail($id);
+        $penjualan = Penjualan::with('details.produk')
+            ->findOrFail($id);
 
         return view('publik.transaksi_selesai', compact('penjualan'));
     }
-
 }
