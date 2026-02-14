@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Kategori;
 
 class Produk extends Model
 {
@@ -12,17 +13,28 @@ class Produk extends Model
     protected $table = 'produk';
     protected $primaryKey = 'id_produk';
 
-    // SESUAIKAN DENGAN NAMA KOLOM DI DATABASE
+    public $incrementing = true;
+    protected $keyType = 'int';
+
     protected $fillable = [
         'nama_produk',
+        'kategori_id',
         'stok',
         'harga',
-        'gambar_produk', // <-- ini yang dipakai controller & migration
+        'gambar_produk',
     ];
 
-    // kolom di migration integer, jadi cast decimal:2 nggak perlu
-    // boleh dihapus atau ganti ke integer
-    // protected $casts = [
-    //     'harga' => 'integer',
-    // ];
+    protected $casts = [
+        'stok' => 'integer',
+        'harga' => 'integer',
+        'kategori_id' => 'integer',
+    ];
+
+    /**
+     * Relasi ke tabel kategori
+     */
+    public function kategori()
+    {
+        return $this->belongsTo(Kategori::class, 'kategori_id');
+    }
 }

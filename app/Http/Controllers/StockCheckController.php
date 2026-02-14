@@ -62,39 +62,37 @@ class StockCheckController extends Controller
 
     public function riwayat(Request $request)
     {
-        $mode = $request->mode ?? 'harian';
-        $tanggal = $request->tanggal;
-        $minggu = $request->minggu;
-        $bulan = $request->bulan;
+        // Validasi input
+        $request->validate([
+            'tanggal_mulai'   => 'nullable|date',
+            'tanggal_selesai' => 'nullable|date|after_or_equal:tanggal_mulai',
+        ]);
 
         $query = StockCheck::with('produk');
 
-        if ($mode == 'harian' && $tanggal) {
+        // Filter berdasarkan date range
+        if ($request->filled('tanggal_mulai') && $request->filled('tanggal_selesai')) {
 
-            $query->whereDate('tanggal', $tanggal);
+            $query->whereBetween('tanggal', [
+                $request->tanggal_mulai,
+                $request->tanggal_selesai
+            ]);
 
-        } elseif ($mode == 'mingguan' && $minggu) {
+        } elseif ($request->filled('tanggal_mulai')) {
 
-            $tahun = date('Y');
+            // Jika hanya tanggal mulai diisi
+            $query->whereDate('tanggal', '>=', $request->tanggal_mulai);
 
-            $query->whereRaw('WEEK(tanggal, 1) = ?', [$minggu])
-                ->whereYear('tanggal', $tahun);
+        } elseif ($request->filled('tanggal_selesai')) {
 
-        } elseif ($mode == 'bulanan' && $bulan) {
-
-            $query->whereMonth('tanggal', $bulan)
-                ->whereYear('tanggal', date('Y'));
+            // Jika hanya tanggal selesai diisi
+            $query->whereDate('tanggal', '<=', $request->tanggal_selesai);
         }
 
         $checks = $query->orderBy('tanggal', 'desc')->get();
 
-        return view('admin.riwayat_stok', compact(
-            'checks',
-            'mode',
-            'tanggal',
-            'minggu',
-            'bulan'
-        ));
+        return view('admin.riwayat_stok', compact('checks'));
     }
+
 
 }

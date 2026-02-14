@@ -1,40 +1,57 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Produk;
+use App\Models\Kategori;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class ProdukController extends Controller
 {
+    /**
+     * Tampilkan daftar produk (admin)
+     */
     public function index()
     {
-        $produks = Produk::orderBy('nama_produk')->paginate(10);
+        $produks = Produk::with('kategori')
+            ->orderBy('nama_produk')
+            ->paginate(10);
 
         return view('produk.lihat', compact('produks'));
     }
 
+    /**
+     * Form tambah produk
+     */
     public function create()
     {
-        return view('produk.tambah');
+        $kategori = Kategori::orderBy('nama_kategori')->get();
+
+        return view('produk.tambah', compact('kategori'));
     }
 
+    /**
+     * Simpan produk baru
+     */
     public function store(Request $request)
     {
+        // dd($request->kategori_id);
+    
         $data = $request->validate([
-            'nama_produk' => 'required|string|max:255',
-            'stok'        => 'required|integer|min:0',
-            'harga'       => 'required|integer|min:0',
-            'gambar'      => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'nama_produk'   => 'required|string|max:255',
+            'kategori_id'   => 'required|exists:kategori,id',
+            'stok'          => 'required|integer|min:0',
+            'harga'         => 'required|integer|min:0',
+            'gambar_produk' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
-        // handle upload
-        if ($request->hasFile('gambar')) {
-            $path = $request->file('gambar')->store('produk', 'public'); // -> "produk/namafile.jpg"
-            $data['gambar_produk'] = $path;
+        // Upload gambar jika ada
+        if ($request->hasFile('gambar_produk')) {
+            $data['gambar_produk'] = $request
+                ->file('gambar_produk')
+                ->store('produk', 'public');
         }
-
-        unset($data['gambar']); // jangan simpan field 'gambar' ke DB
 
         Produk::create($data);
 
@@ -43,32 +60,42 @@ class ProdukController extends Controller
             ->with('success', 'Produk berhasil ditambahkan.');
     }
 
+    /**
+     * Form edit produk
+     */
     public function edit(Produk $produk)
     {
-        return view('produk.edit', compact('produk'));
+        $kategori = Kategori::orderBy('nama_kategori')->get();
+
+        return view('produk.edit', compact('produk', 'kategori'));
     }
 
+    /**
+     * Update produk
+     */
     public function update(Request $request, Produk $produk)
     {
         $data = $request->validate([
-            'nama_produk' => 'required|string|max:255',
-            'stok'        => 'required|integer|min:0',
-            'harga'       => 'required|integer|min:0',
-            'gambar'      => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'nama_produk'   => 'required|string|max:255',
+            'kategori_id'   => 'required|exists:kategori,id',
+            'stok'          => 'required|integer|min:0',
+            'harga'         => 'required|integer|min:0',
+            'gambar_produk' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
-        // kalau upload gambar baru
-        if ($request->hasFile('gambar')) {
-            // hapus file lama kalau masih ada
-            if ($produk->gambar_produk && Storage::disk('public')->exists($produk->gambar_produk)) {
+        // Jika upload gambar baru
+        if ($request->hasFile('gambar_produk')) {
+
+            // Hapus gambar lama jika ada
+            if ($produk->gambar_produk &&
+                Storage::disk('public')->exists($produk->gambar_produk)) {
                 Storage::disk('public')->delete($produk->gambar_produk);
             }
 
-            $path = $request->file('gambar')->store('produk', 'public');
-            $data['gambar_produk'] = $path;
+            $data['gambar_produk'] = $request
+                ->file('gambar_produk')
+                ->store('produk', 'public');
         }
-
-        unset($data['gambar']);
 
         $produk->update($data);
 
@@ -77,9 +104,13 @@ class ProdukController extends Controller
             ->with('success', 'Produk berhasil diperbarui.');
     }
 
+    /**
+     * Hapus produk
+     */
     public function destroy(Produk $produk)
     {
-        if ($produk->gambar_produk && Storage::disk('public')->exists($produk->gambar_produk)) {
+        if ($produk->gambar_produk &&
+            Storage::disk('public')->exists($produk->gambar_produk)) {
             Storage::disk('public')->delete($produk->gambar_produk);
         }
 
@@ -89,23 +120,30 @@ class ProdukController extends Controller
             ->route('admin.produk.lihat')
             ->with('success', 'Produk berhasil dihapus.');
     }
-    
-    // TAMPILAN PRODUK PUBLIK
+
+    /**
+     * Halaman publik daftar produk
+     */
     public function publicPage()
     {
-        // misal 12 produk per halaman
-        $produks = Produk::orderBy('nama_produk')->paginate(12);
+        $produks = Produk::with('kategori')
+            ->orderBy('nama_produk')
+            ->paginate(12);
 
         return view('publik.index', compact('produks'));
     }
-        // keranjang checkout produk
-        public function publikCheckout()
+
+    /**
+     * Halaman checkout publik
+     */
+    public function publikCheckout()
     {
-        $produks = Produk::paginate(20);
-        $cartCount = session('cart_count', 0); // atau hitung dari tabel cart user
+        $produks   = Produk::with('kategori')->paginate(20);
+        $cartCount = session('cart_count', 0);
 
         return view('publik.daftar-produk', compact('produks', 'cartCount'));
     }
-
-
 }
+
+
+

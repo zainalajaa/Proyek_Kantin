@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProdukController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\Admin\PenjualanController;
@@ -32,8 +33,13 @@ Route::middleware('guest:admin')->group(function () {
 // Hanya boleh diakses jika SUDAH login sebagai admin
 Route::middleware('auth:admin')->group(function () {
 
-    Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])
-        ->name('admin.dashboard');
+    // Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])
+    //     ->name('admin.dashboard');
+    
+
+    Route::get('/admin/dashboard', [DashboardController::class, 'index'])
+    ->name('admin.dashboard');
+
 
     Route::post('/admin/logout', [AuthController::class, 'logout'])
         ->name('admin.logout');

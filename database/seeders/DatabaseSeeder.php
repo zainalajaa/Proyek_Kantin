@@ -11,8 +11,8 @@ class DatabaseSeeder extends Seeder
     {
         Admin::create([
             'name' => 'Admin Kantin',
-            'email' => 'admin@pln.com',       // username login
-            'password' => bcrypt('password11'), // password HARUS di-hash
+            'email' => 'kantin01@gmail.com',       // username login
+            'password' => bcrypt('password01'), // password HARUS di-hash
         ]);
     }
 }

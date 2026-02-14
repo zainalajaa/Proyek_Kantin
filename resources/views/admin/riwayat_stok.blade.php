@@ -4,230 +4,204 @@
 
 @section('content')
 
-<div class="p-4">
+<div class="container-fluid">
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="fw-bold">Riwayat Selisih Stok</h4>
-    </div>
+    <!-- Judul Section -->
+    <h5 class="mb-3">Riwayat Selisih Stok</h5>
 
-    <div class="bg-white rounded shadow-sm mb-4">
+<!-- CARD FILTER MODERN -->
+<div class="card border-0 shadow-sm mb-4" 
+     style="border-radius:16px; background:linear-gradient(145deg,#ffffff,#f8fafc);">
 
-    <div class="p-3 border-bottom">
-        <h6 class="fw-bold mb-0">Filter Riwayat Selisih Stok</h6>
-    </div>
+    <div class="card-body p-4">
 
-    <div class="p-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h6 class="fw-bold mb-0">
+                📅 Filter Periode Riwayat Stok
+            </h6>
 
-        <form method="GET">
+            <small class="text-muted">
+                Pilih rentang tanggal untuk melihat riwayat
+            </small>
+        </div>
 
-            <div class="row g-4">
+        <form method="GET" action="{{ route('admin.monitoring_stok.riwayat') }}">
 
-                <!-- MODE RIWAYAT -->
-                <div class="col-lg-3 col-md-6">
-                    <label class="form-label fw-bold">Mode Riwayat</label>
+            <div class="row g-3 align-items-end">
 
-                    <select name="mode" class="form-select p-2">
-                        <option value="harian" {{ $mode == 'harian' ? 'selected' : '' }}>
-                            Harian
-                        </option>
-
-                        <option value="mingguan" {{ $mode == 'mingguan' ? 'selected' : '' }}>
-                            Mingguan
-                        </option>
-
-                        <option value="bulanan" {{ $mode == 'bulanan' ? 'selected' : '' }}>
-                            Bulanan
-                        </option>
-                    </select>
-
-                    <small class="text-muted">
-                        Pilih jenis periode laporan
-                    </small>
-                </div>
-
-
-                <!-- TANGGAL -->
-                <div class="col-lg-3 col-md-6">
-                    <label class="form-label fw-bold">Tanggal (Harian)</label>
-
+                <!-- TANGGAL MULAI -->
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold text-muted small">
+                        Tanggal Mulai
+                    </label>
                     <input type="date"
-                           name="tanggal"
-                           class="form-control p-2"
-                           value="{{ $tanggal }}">
-
-                    <small class="text-muted">
-                        Aktif saat mode harian
-                    </small>
+                           name="tanggal_mulai"
+                           class="form-control border-0 shadow-sm"
+                           style="border-radius:12px;"
+                           value="{{ old('tanggal_mulai', $tanggal_mulai ?? '') }}">
                 </div>
 
-
-                <!-- MINGGU -->
-                <div class="col-lg-3 col-md-6">
-                    <label class="form-label fw-bold">Minggu ke-</label>
-
-                    <input type="number"
-                           min="1"
-                           max="53"
-                           name="minggu"
-                           class="form-control p-2"
-                           placeholder="Contoh: 12"
-                           value="{{ $minggu }}">
-
-                    <small class="text-muted">
-                        Aktif saat mode mingguan
-                    </small>
+                <!-- TANGGAL SELESAI -->
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold text-muted small">
+                        Tanggal Selesai
+                    </label>
+                    <input type="date"
+                           name="tanggal_selesai"
+                           class="form-control border-0 shadow-sm"
+                           style="border-radius:12px;"
+                           value="{{ old('tanggal_selesai', $tanggal_selesai ?? '') }}">
                 </div>
 
-
-                <!-- BULAN -->
-                <div class="col-lg-3 col-md-6">
-                    <label class="form-label fw-bold">Bulan</label>
-
-                    <select name="bulan" class="form-select p-2">
-                        <option value="">-- Pilih Bulan --</option>
-
-                        @for($i = 1; $i <= 12; $i++)
-                            <option value="{{ $i }}"
-                                {{ $bulan == $i ? 'selected' : '' }}>
-                                {{ date('F', mktime(0,0,0,$i,1)) }}
-                            </option>
-                        @endfor
-                    </select>
-
-                    <small class="text-muted">
-                        Aktif saat mode bulanan
-                    </small>
-                </div>
-
-            </div>
-
-
-            <!-- TOMBOL AKSI -->
-            <div class="row mt-4 g-3">
-
-                <div class="col-md-6">
-                    <button class="btn btn-primary w-100 p-2 fw-bold">
+                <!-- BUTTON -->
+                <div class="col-md-4 d-grid">
+                    <button type="submit"
+                            class="btn text-white fw-semibold"
+                            style="background-color:#0f766e;
+                                   border-radius:12px;
+                                   padding:10px 0;">
                         🔍 Tampilkan Riwayat
                     </button>
                 </div>
 
-                <div class="col-md-6">
-                    <a href="{{ route('admin.monitoring_stok.riwayat') }}"
-                       class="btn btn-outline-secondary w-100 p-2 fw-bold">
-                        ↺ Reset Filter
-                    </a>
-                </div>
+            </div>
+
+            <!-- QUICK FILTER -->
+            <div class="mt-4 d-flex gap-2 flex-wrap">
+
+                <a href="?tanggal_mulai={{ now()->toDateString() }}&tanggal_selesai={{ now()->toDateString() }}"
+                   class="btn btn-sm btn-light shadow-sm rounded-pill px-3">
+                    Hari Ini
+                </a>
+
+                <a href="?tanggal_mulai={{ now()->subDays(7)->toDateString() }}&tanggal_selesai={{ now()->toDateString() }}"
+                   class="btn btn-sm btn-light shadow-sm rounded-pill px-3">
+                    7 Hari Terakhir
+                </a>
+
+                <a href="?tanggal_mulai={{ now()->startOfMonth()->toDateString() }}&tanggal_selesai={{ now()->endOfMonth()->toDateString() }}"
+                   class="btn btn-sm btn-light shadow-sm rounded-pill px-3">
+                    Bulan Ini
+                </a>
 
             </div>
 
         </form>
 
     </div>
-
 </div>
 
 
 
-   <div class="bg-white rounded shadow-sm">
+    <!-- CARD TABEL -->
+    <div class="card shadow-sm">
+    <div class="card-body">
 
-    <div class="table-responsive p-3">
+        @if(request('tanggal_mulai') && request('tanggal_selesai'))
+            <p class="mb-3">
+                Menampilkan data selisih stok dari
+                <strong>{{ request('tanggal_mulai') }}</strong>
+                sampai
+                <strong>{{ request('tanggal_selesai') }}</strong>
+            </p>
+        @endif
 
-        <table class="table table-bordered align-middle w-100">
+        <div class="table-responsive">
 
-            <thead style="background-color: #f1f5f9;">
-                <tr>
-                    <th class="py-3 px-3 text-center" style="width:5%;">No</th>
-                    <th class="py-3 px-3" style="width:15%;">Tanggal</th>
-                    <th class="py-3 px-3" style="width:30%;">Nama Produk</th>
-                    <th class="py-3 px-3 text-center" style="width:12%;">Stok Sistem</th>
-                    <th class="py-3 px-3 text-center" style="width:12%;">Stok Fisik</th>
-                    <th class="py-3 px-3 text-center" style="width:10%;">Selisih</th>
-                    <th class="py-3 px-3 text-center" style="width:16%;">Status</th>
-                </tr>
-            </thead>
+            <table class="table align-middle">
 
-            <tbody>
+                <thead style="background-color: #f1f5f9;">
+                    <tr>
+                        <th class="py-3 px-3 text-center" style="width:5%;">No</th>
+                        <th class="py-3 px-3" style="width:15%;">Tanggal</th>
+                        <th class="py-3 px-3" style="width:25%;">Nama Produk</th>
+                        <th class="py-3 px-3 text-center" style="width:12%;">Stok Sistem</th>
+                        <th class="py-3 px-3 text-center" style="width:12%;">Stok Fisik</th>
+                        <th class="py-3 px-3 text-center" style="width:10%;">Selisih</th>
+                        <th class="py-3 px-3 text-center" style="width:15%;">Status</th>
+                    </tr>
+                </thead>
 
-            @forelse($checks as $index => $c)
+                <tbody>
 
-                @php
-                    if($c->selisih == 0){
-                        $statusColor = '#0f766e';   // hijau modern
-                        $text = 'Sesuai';
-                    } elseif($c->selisih > 0){
-                        $statusColor = '#b91c1c';   // merah
-                        $text = 'Kurang';
-                    } else {
-                        $statusColor = '#d97706';   // orange
-                        $text = 'Lebih';
-                    }
-                @endphp
+                @forelse($checks as $index => $c)
 
-                <tr>
-                    <td class="py-3 px-3 text-center">
-                        {{ $index + 1 }}
-                    </td>
+                    @php
+                        if($c->selisih == 0){
+                            $statusColor = '#0f766e'; // hijau modern
+                            $text = 'Sesuai';
+                        } elseif($c->selisih > 0){
+                            $statusColor = '#b91c1c'; // merah
+                            $text = 'Kurang';
+                        } else {
+                            $statusColor = '#d97706'; // orange
+                            $text = 'Lebih';
+                        }
+                    @endphp
 
-                    <td class="py-3 px-3">
-                        {{ $c->tanggal }}
-                    </td>
+                    <tr>
+                        <td class="py-3 px-3 text-center">
+                            {{ $index + 1 }}
+                        </td>
 
-                    <td class="py-3 px-3">
-                        {{ $c->produk->nama_produk }}
-                    </td>
+                        <td class="py-3 px-3">
+                            {{ $c->tanggal }}
+                        </td>
 
-                    <td class="py-3 px-3 text-center fw-bold">
-                        {{ $c->stok_sistem }}
-                    </td>
+                        <td class="py-3 px-3">
+                            {{ $c->produk->nama_produk }}
+                        </td>
 
-                    <td class="py-3 px-3 text-center fw-bold">
-                        {{ $c->stok_fisik }}
-                    </td>
+                        <td class="py-3 px-3 text-center fw-bold">
+                            {{ $c->stok_sistem }}
+                        </td>
 
-                    <td class="py-3 px-3 text-center fw-bold">
-                        {{ $c->selisih }}
-                    </td>
+                        <td class="py-3 px-3 text-center fw-bold">
+                            {{ $c->stok_fisik }}
+                        </td>
 
-                    <td class="py-3 px-3 text-center">
-                        <span style="
-                            background-color: {{ $statusColor }};
-                            color: white;
-                            padding: 8px 16px;
-                            border-radius: 10px;
-                            font-weight: 600;
-                            font-size: 14px;
-                            min-width: 120px;
-                            display: inline-block;
-                            text-align: center;
-                        ">
-                            {{ $text }}
+                        <td class="py-3 px-3 text-center fw-bold">
+                            {{ $c->selisih }}
+                        </td>
 
-                            @if($c->selisih != 0)
-                                ({{ abs($c->selisih) }})
-                            @endif
-                        </span>
-                    </td>
-                </tr>
+                        <td class="py-3 px-3 text-center">
+                            <span style="
+                                background-color: {{ $statusColor }};
+                                color: white;
+                                padding: 8px 16px;
+                                border-radius: 10px;
+                                font-weight: 600;
+                                font-size: 14px;
+                                min-width: 120px;
+                                display: inline-block;
+                                text-align: center;
+                            ">
+                                {{ $text }}
 
-            @empty
+                                @if($c->selisih != 0)
+                                    ({{ abs($c->selisih) }})
+                                @endif
+                            </span>
+                        </td>
+                    </tr>
 
-                <tr>
-                    <td colspan="7" class="text-center text-muted py-5">
-                        Tidak ada data riwayat selisih stok
-                    </td>
-                </tr>
+                @empty
 
-            @endforelse
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-5">
+                            Tidak ada data riwayat selisih stok
+                        </td>
+                    </tr>
 
-            </tbody>
+                @endforelse
 
-        </table>
+                </tbody>
+
+            </table>
+
+        </div>
 
     </div>
-
-</div>
-
-
 </div>
 
 @endsection
