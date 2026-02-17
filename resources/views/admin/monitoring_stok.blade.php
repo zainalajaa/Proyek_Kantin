@@ -6,37 +6,44 @@
 
 <div class="p-4">
 
-    <!-- Header Halaman -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="fw-bold">Monitoring Stok</h4>
+    <!-- HEADER HALAMAN -->
+    <div class="mb-6 flex items-center justify-between">
+        <h1 class="text-xl font-bold text-gray-800">
+            Monitoring Stok
+        </h1>
+        <span class="text-sm text-gray-500">
+            {{ date('d M Y') }}
+        </span>
     </div>
 
+    {{-- SUCCESS MESSAGE --}}
     @if(session('success'))
-        <div class="alert alert-success">
+        <div class="mb-4 rounded-lg bg-emerald-100 text-emerald-700 px-4 py-3 text-sm">
             {{ session('success') }}
         </div>
     @endif
 
+    {{-- ERROR MESSAGE --}}
     @if ($errors->any())
-        <div class="alert alert-danger">
-            <ul class="mb-0">
+        <div class="mb-4 rounded-lg bg-red-100 text-red-700 px-4 py-3 text-sm">
+            <ul class="mb-0 space-y-1">
                 @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
+                    <li>• {{ $error }}</li>
                 @endforeach
             </ul>
         </div>
     @endif
 
-<!-- FORM INPUT PENGECEKAN -->
-<div class="card border-0 shadow-sm mb-5">
 
-    <div class="card-body p-5">
+    <!-- FORM MONITORING -->
+    <div class="bg-white shadow rounded p-6 mb-6">
 
-        <div class="mb-4">
-            <h5 class="fw-semibold mb-1">
+        <!-- HEADER FORM -->
+        <div class="mb-5">
+            <h2 class="text-lg font-semibold text-gray-800 mb-1">
                 Monitoring Stok Harian
-            </h5>
-            <p class="text-muted mb-0" style="font-size: 14px;">
+            </h2>
+            <p class="text-sm text-gray-500">
                 Input stok fisik untuk menghitung selisih dengan stok sistem.
             </p>
         </div>
@@ -48,53 +55,46 @@
         <form action="{{ route('admin.monitoring_stok.store') }}" method="POST">
             @csrf
 
-            <div class="row gy-4">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
 
-                <!-- PILIH PRODUK -->
-                <div class="col-md-6">
-                    <label class="form-label text-secondary small mb-2">
-                        Produk
+                <!-- PRODUK -->
+                <div class="lg:col-span-6">
+                    <label class="block text-sm font-medium text-gray-600 mb-2">
+                        Pilih Produk
                     </label>
-
                     <select name="id_produk"
-                            class="form-select py-2"
-                            required>
-
-                        <option value="">
-                            Pilih produk
-                        </option>
-
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-gray-300 outline-none"
+                        required>
+                        <option value="">Pilih produk</option>
                         @foreach($produk as $p)
                             <option value="{{ $p->id_produk }}"
                                 {{ in_array($p->id_produk, $produkSudahDicek) ? 'disabled' : '' }}>
-                                
                                 {{ $p->nama_produk }}
-
                                 @if(in_array($p->id_produk, $produkSudahDicek))
-                                    - (Sudah dicek)
+                                    (Sudah dicek)
                                 @endif
                             </option>
                         @endforeach
-
                     </select>
                 </div>
 
-                <!-- INPUT STOK FISIK -->
-                <div class="col-md-4">
-                    <label class="form-label text-secondary small mb-2">
+                <!-- STOK FISIK -->
+                <div class="lg:col-span-4">
+                    <label class="block text-sm font-medium text-gray-600 mb-2">
                         Stok Fisik
                     </label>
-
                     <input type="number"
                         name="stok_fisik"
-                        class="form-control py-2"
+                        min="0"
                         placeholder="Masukkan jumlah"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-gray-300 outline-none"
                         required>
                 </div>
 
-                <!-- TOMBOL -->
-                <div class="col-md-2 d-flex align-items-end">
-                    <button class="btn btn-dark w-100 py-2">
+                <!-- BUTTON -->
+                <div class="lg:col-span-2">
+                    <button type="submit"
+                        class="w-full bg-gray-800 text-white py-2.5 rounded-lg text-sm font-semibold hover:bg-gray-700 transition">
                         Simpan
                     </button>
                 </div>
@@ -104,7 +104,7 @@
         </form>
 
     </div>
-</div>
+
 
 
     <div class="alert alert-info">

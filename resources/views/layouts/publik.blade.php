@@ -79,15 +79,44 @@
 
     {{-- Flash messages --}}
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 w-full">
+
         @if(session('success'))
-            <div class="mb-4 text-green-800 bg-green-100 border border-green-200 p-3 rounded">
-                {{ session('success') }}
+            <div id="flash-success"
+                class="flash-message mb-4 flex items-center gap-3 
+                    rounded-2xl border border-emerald-500/40 
+                    bg-slate-800 text-emerald-300 
+                    px-4 py-3 shadow-lg transition-all duration-500">
+
+                <div class="flex items-center justify-center h-8 w-8 rounded-lg bg-emerald-500/20">
+                    ✓
+                </div>
+
+                <div class="flex-1 text-sm font-medium">
+                    {{ session('success') }}
+                </div>
+
+                <button onclick="closeFlash('flash-success')"
+                    class="text-emerald-300 hover:text-white text-sm">
+                    ✕
+                </button>
             </div>
         @endif
 
         @if(session('error'))
-            <div class="mb-4 text-red-800 bg-red-100 border border-red-200 p-3 rounded">
-                {{ session('error') }}
+            <div id="flash-error"
+                class="flash-message mb-4 flex items-center gap-3 
+                    rounded-2xl border border-red-500/40 
+                    bg-slate-800 text-red-300 
+                    px-4 py-3 shadow-lg transition-all duration-500">
+
+                <div class="flex items-center justify-center h-8 w-8 rounded-lg bg-red-500/20">
+                    ⚠
+                </div>
+
+                <div class="flex-1 text-sm font-medium">
+                    {{ session('error') }}
+                </div>
+
             </div>
         @endif
     </div>
@@ -105,5 +134,23 @@
     </footer>
 
     @stack('scripts')
+
+    <script>
+        function closeFlash(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+
+            el.style.opacity = '0';
+            setTimeout(() => el.remove(), 500);
+        }
+
+        setTimeout(() => {
+            document.querySelectorAll('.flash-message').forEach(el => {
+                el.style.opacity = '0';
+                setTimeout(() => el.remove(), 500);
+            });
+        }, 3000);
+    </script>
+
 </body>
 </html>

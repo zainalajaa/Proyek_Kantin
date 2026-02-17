@@ -10,196 +10,200 @@
     <h5 class="mb-3">Riwayat Selisih Stok</h5>
 
 <!-- CARD FILTER MODERN -->
-<div class="card border-0 shadow-sm mb-4" 
-     style="border-radius:16px; background:linear-gradient(145deg,#ffffff,#f8fafc);">
+<div class="card border-0 shadow rounded-4 mb-4">
 
-    <div class="card-body p-4">
+   <div class="p-4">
 
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h6 class="fw-bold mb-0">
-                📅 Filter Periode Riwayat Stok
-            </h6>
+            <!-- HEADER HALAMAN -->
+            <div class="mb-6 flex items-center justify-between">
+                <h1 class="text-xl font-bold text-gray-800">
+                    Riwayat Selisih Stok
+                </h1>
+                <span class="text-sm text-gray-500">
+                    Data Monitoring Historis
+                </span>
+            </div>
 
-            <small class="text-muted">
-                Pilih rentang tanggal untuk melihat riwayat
-            </small>
-        </div>
+            <!-- FILTER -->
+            <div class="bg-white shadow rounded p-6 mb-6">
 
-        <form method="GET" action="{{ route('admin.monitoring_stok.riwayat') }}">
-
-            <div class="row g-3 align-items-end">
-
-                <!-- TANGGAL MULAI -->
-                <div class="col-md-4">
-                    <label class="form-label fw-semibold text-muted small">
-                        Tanggal Mulai
-                    </label>
-                    <input type="date"
-                           name="tanggal_mulai"
-                           class="form-control border-0 shadow-sm"
-                           style="border-radius:12px;"
-                           value="{{ old('tanggal_mulai', $tanggal_mulai ?? '') }}">
+                <div class="mb-5">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-1">
+                        Filter Periode
+                    </h2>
+                    <p class="text-sm text-gray-500">
+                        Pilih rentang tanggal untuk menampilkan riwayat monitoring stok.
+                    </p>
                 </div>
 
-                <!-- TANGGAL SELESAI -->
-                <div class="col-md-4">
-                    <label class="form-label fw-semibold text-muted small">
-                        Tanggal Selesai
-                    </label>
-                    <input type="date"
-                           name="tanggal_selesai"
-                           class="form-control border-0 shadow-sm"
-                           style="border-radius:12px;"
-                           value="{{ old('tanggal_selesai', $tanggal_selesai ?? '') }}">
-                </div>
+                <form method="GET" action="{{ route('admin.monitoring_stok.riwayat') }}">
 
-                <!-- BUTTON -->
-                <div class="col-md-4 d-grid">
-                    <button type="submit"
-                            class="btn text-white fw-semibold"
-                            style="background-color:#0f766e;
-                                   border-radius:12px;
-                                   padding:10px 0;">
-                        🔍 Tampilkan Riwayat
-                    </button>
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
+
+                        <!-- TANGGAL MULAI -->
+                        <div class="lg:col-span-4">
+                            <label class="block text-sm font-medium text-gray-600 mb-2">
+                                Tanggal Mulai
+                            </label>
+                            <input type="date"
+                                name="tanggal_mulai"
+                                value="{{ old('tanggal_mulai', $tanggal_mulai ?? '') }}"
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-gray-300 outline-none">
+                        </div>
+
+                        <!-- TANGGAL SELESAI -->
+                        <div class="lg:col-span-4">
+                            <label class="block text-sm font-medium text-gray-600 mb-2">
+                                Tanggal Selesai
+                            </label>
+                            <input type="date"
+                                name="tanggal_selesai"
+                                value="{{ old('tanggal_selesai', $tanggal_selesai ?? '') }}"
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-gray-300 outline-none">
+                        </div>
+
+                        <!-- BUTTON -->
+                        <div class="lg:col-span-4">
+                            <button type="submit"
+                                class="w-full bg-gray-800 text-white py-2.5 rounded-lg text-sm font-semibold hover:bg-gray-700 transition">
+                                Tampilkan Riwayat
+                            </button>
+                        </div>
+
+                    </div>
+
+                    <!-- QUICK FILTER -->
+                    <div class="mt-5 pt-4 border-t border-gray-200 flex flex-wrap gap-2 items-center">
+
+                        <span class="text-sm text-gray-500">
+                            Filter Cepat:
+                        </span>
+
+                        <a href="?tanggal_mulai={{ now()->toDateString() }}&tanggal_selesai={{ now()->toDateString() }}"
+                        class="px-3 py-1 text-xs rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 transition">
+                            Hari Ini
+                        </a>
+
+                        <a href="?tanggal_mulai={{ now()->subDays(7)->toDateString() }}&tanggal_selesai={{ now()->toDateString() }}"
+                        class="px-3 py-1 text-xs rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 transition">
+                            7 Hari Terakhir
+                        </a>
+
+                        <a href="?tanggal_mulai={{ now()->startOfMonth()->toDateString() }}&tanggal_selesai={{ now()->endOfMonth()->toDateString() }}"
+                        class="px-3 py-1 text-xs rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 transition">
+                            Bulan Ini
+                        </a>
+
+                    </div>
+
+                </form>
+            </div>
+
+
+            <!-- INFO RANGE -->
+            @if(request('tanggal_mulai') && request('tanggal_selesai'))
+                <div class="mb-4 text-sm text-gray-600">
+                    Menampilkan data dari
+                    <span class="font-semibold">{{ request('tanggal_mulai') }}</span>
+                    sampai
+                    <span class="font-semibold">{{ request('tanggal_selesai') }}</span>
+                </div>
+            @endif
+
+
+            <!-- TABEL -->
+            <div class="bg-white shadow rounded p-6">
+
+                <div class="overflow-x-auto">
+
+                    <table class="min-w-full divide-y divide-gray-200 text-sm">
+
+                        <thead class="bg-gray-50 text-gray-700 text-xs uppercase tracking-wide">
+                            <tr>
+                                <th class="px-4 py-3 text-center">No</th>
+                                <th class="px-4 py-3 text-left">Tanggal</th>
+                                <th class="px-4 py-3 text-left">Nama Produk</th>
+                                <th class="px-4 py-3 text-center">Stok Sistem</th>
+                                <th class="px-4 py-3 text-center">Stok Fisik</th>
+                                <th class="px-4 py-3 text-center">Selisih</th>
+                                <th class="px-4 py-3 text-center">Status</th>
+                            </tr>
+                        </thead>
+
+                        <tbody class="bg-white divide-y divide-gray-200">
+
+                        @forelse($checks as $index => $c)
+
+                            @php
+                                if($c->selisih == 0){
+                                    $badgeClass = 'bg-emerald-100 text-emerald-700';
+                                    $text = 'Sesuai';
+                                } elseif($c->selisih > 0){
+                                    $badgeClass = 'bg-red-100 text-red-700';
+                                    $text = 'Kurang';
+                                } else {
+                                    $badgeClass = 'bg-amber-100 text-amber-700';
+                                    $text = 'Lebih';
+                                }
+                            @endphp
+
+                            <tr class="hover:bg-gray-50 transition">
+
+                                <td class="px-4 py-3 text-center text-gray-600">
+                                    {{ $index + 1 }}
+                                </td>
+
+                                <td class="px-4 py-3">
+                                    {{ \Carbon\Carbon::parse($c->tanggal)->format('Y-m-d') }}
+                                </td>
+
+                                <td class="px-4 py-3 font-medium text-gray-800">
+                                    {{ $c->produk->nama_produk }}
+                                </td>
+
+                                <td class="px-4 py-3 text-center font-semibold">
+                                    {{ $c->stok_sistem }}
+                                </td>
+
+                                <td class="px-4 py-3 text-center font-semibold">
+                                    {{ $c->stok_fisik }}
+                                </td>
+
+                                <td class="px-4 py-3 text-center font-semibold">
+                                    {{ $c->selisih }}
+                                </td>
+
+                                <td class="px-4 py-3 text-center">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold {{ $badgeClass }}">
+                                        {{ $text }}
+                                        @if($c->selisih != 0)
+                                            ({{ abs($c->selisih) }})
+                                        @endif
+                                    </span>
+                                </td>
+
+                            </tr>
+
+                        @empty
+
+                            <tr>
+                                <td colspan="7" class="px-4 py-8 text-center text-gray-400">
+                                    Tidak ada data riwayat selisih stok
+                                </td>
+                            </tr>
+
+                        @endforelse
+
+                        </tbody>
+
+                    </table>
+
                 </div>
 
             </div>
 
-            <!-- QUICK FILTER -->
-            <div class="mt-4 d-flex gap-2 flex-wrap">
-
-                <a href="?tanggal_mulai={{ now()->toDateString() }}&tanggal_selesai={{ now()->toDateString() }}"
-                   class="btn btn-sm btn-light shadow-sm rounded-pill px-3">
-                    Hari Ini
-                </a>
-
-                <a href="?tanggal_mulai={{ now()->subDays(7)->toDateString() }}&tanggal_selesai={{ now()->toDateString() }}"
-                   class="btn btn-sm btn-light shadow-sm rounded-pill px-3">
-                    7 Hari Terakhir
-                </a>
-
-                <a href="?tanggal_mulai={{ now()->startOfMonth()->toDateString() }}&tanggal_selesai={{ now()->endOfMonth()->toDateString() }}"
-                   class="btn btn-sm btn-light shadow-sm rounded-pill px-3">
-                    Bulan Ini
-                </a>
-
-            </div>
-
-        </form>
-
-    </div>
-</div>
-
-
-
-    <!-- CARD TABEL -->
-    <div class="card shadow-sm">
-    <div class="card-body">
-
-        @if(request('tanggal_mulai') && request('tanggal_selesai'))
-            <p class="mb-3">
-                Menampilkan data selisih stok dari
-                <strong>{{ request('tanggal_mulai') }}</strong>
-                sampai
-                <strong>{{ request('tanggal_selesai') }}</strong>
-            </p>
-        @endif
-
-        <div class="table-responsive">
-
-            <table class="table align-middle">
-
-                <thead style="background-color: #f1f5f9;">
-                    <tr>
-                        <th class="py-3 px-3 text-center" style="width:5%;">No</th>
-                        <th class="py-3 px-3" style="width:15%;">Tanggal</th>
-                        <th class="py-3 px-3" style="width:25%;">Nama Produk</th>
-                        <th class="py-3 px-3 text-center" style="width:12%;">Stok Sistem</th>
-                        <th class="py-3 px-3 text-center" style="width:12%;">Stok Fisik</th>
-                        <th class="py-3 px-3 text-center" style="width:10%;">Selisih</th>
-                        <th class="py-3 px-3 text-center" style="width:15%;">Status</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-
-                @forelse($checks as $index => $c)
-
-                    @php
-                        if($c->selisih == 0){
-                            $statusColor = '#0f766e'; // hijau modern
-                            $text = 'Sesuai';
-                        } elseif($c->selisih > 0){
-                            $statusColor = '#b91c1c'; // merah
-                            $text = 'Kurang';
-                        } else {
-                            $statusColor = '#d97706'; // orange
-                            $text = 'Lebih';
-                        }
-                    @endphp
-
-                    <tr>
-                        <td class="py-3 px-3 text-center">
-                            {{ $index + 1 }}
-                        </td>
-
-                        <td class="py-3 px-3">
-                            {{ $c->tanggal }}
-                        </td>
-
-                        <td class="py-3 px-3">
-                            {{ $c->produk->nama_produk }}
-                        </td>
-
-                        <td class="py-3 px-3 text-center fw-bold">
-                            {{ $c->stok_sistem }}
-                        </td>
-
-                        <td class="py-3 px-3 text-center fw-bold">
-                            {{ $c->stok_fisik }}
-                        </td>
-
-                        <td class="py-3 px-3 text-center fw-bold">
-                            {{ $c->selisih }}
-                        </td>
-
-                        <td class="py-3 px-3 text-center">
-                            <span style="
-                                background-color: {{ $statusColor }};
-                                color: white;
-                                padding: 8px 16px;
-                                border-radius: 10px;
-                                font-weight: 600;
-                                font-size: 14px;
-                                min-width: 120px;
-                                display: inline-block;
-                                text-align: center;
-                            ">
-                                {{ $text }}
-
-                                @if($c->selisih != 0)
-                                    ({{ abs($c->selisih) }})
-                                @endif
-                            </span>
-                        </td>
-                    </tr>
-
-                @empty
-
-                    <tr>
-                        <td colspan="7" class="text-center text-muted py-5">
-                            Tidak ada data riwayat selisih stok
-                        </td>
-                    </tr>
-
-                @endforelse
-
-                </tbody>
-
-            </table>
-
         </div>
+
 
     </div>
 </div>

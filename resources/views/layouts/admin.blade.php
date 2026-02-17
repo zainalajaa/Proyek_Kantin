@@ -6,6 +6,8 @@
     <title>@yield('title', 'Dashboard Admin | Kantin Kejujuran')</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
+
+
 <body class="bg-gray-100 text-gray-800">
 
 <div class="flex min-h-screen">

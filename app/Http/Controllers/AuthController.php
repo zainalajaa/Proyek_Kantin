@@ -9,7 +9,6 @@ class AuthController extends Controller
 {
     public function showLoginForm()
     {
-        // View: resources/views/admin/login.blade.php
         return view('admin.login');
     }
 
@@ -37,7 +36,7 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         Auth::guard('admin')->logout();
-
+        
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 

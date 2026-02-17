@@ -3,21 +3,20 @@
 namespace App\Http\Controllers;
 
 use App\Models\Produk;
-use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        $totalProduk = Produk::count();
+        $totalProduk = Produk::sum('stok');
 
         $totalMakanan = Produk::whereHas('kategori', function ($q) {
             $q->where('nama_kategori', 'Makanan');
-        })->count();
+        })->sum('stok');
 
         $totalMinuman = Produk::whereHas('kategori', function ($q) {
             $q->where('nama_kategori', 'Minuman');
-        })->count();
+        })->sum('stok');
 
         return view('admin.dashboard', compact(
             'totalProduk',

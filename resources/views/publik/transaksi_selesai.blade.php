@@ -76,9 +76,9 @@ body {
 }
 </style>
 
-<div class="min-h-screen flex items-center justify-center p-4">
+<div class="min-h-screen pt-20 pb-12 px-4">
 
-    <div class="max-w-md w-full glass border border-white/60 rounded-2xl shadow-xl p-8 text-center">
+    <div class="max-w-md mx-auto glass border border-white/60 rounded-2xl shadow-xl p-8 text-center">
 
         {{-- ICON ANIMASI --}}
         <div class="flex justify-center mb-5 glow">
@@ -130,7 +130,6 @@ body {
             </div>
         </div>
 
-
         <div class="mt-7 fade-3">
             <a href="/"
                class="inline-block text-white px-6 py-2.5 rounded-xl
@@ -143,6 +142,7 @@ body {
 
     </div>
 </div>
+
 
 {{-- SUARA SUKSES --}}
 <audio id="successSound">

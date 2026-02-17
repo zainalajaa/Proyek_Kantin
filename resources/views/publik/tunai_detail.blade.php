@@ -5,7 +5,6 @@
 @section('content')
 
 <style>
-/* Hilangkan spinner input number */
 input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button {
     -webkit-appearance: none;
@@ -16,74 +15,71 @@ input[type=number] {
 }
 </style>
 
-<div class="min-h-screen bg-gray-50 py-6">
+<div class="min-h-screen bg-gradient-to-b from-slate-100 to-slate-200 py-6">
 <div class="max-w-4xl mx-auto px-4">
 
     {{-- HEADER --}}
-    <div class="bg-white rounded-xl shadow p-5 mb-4">
-        <h2 class="text-xl font-semibold text-gray-800">
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 mb-5">
+        <h2 class="text-xl sm:text-2xl font-bold text-slate-800">
             Checkout Pembayaran
         </h2>
 
-        <div class="text-sm text-gray-500 mt-1">
-            ID Transaksi: <span class="font-medium">{{ $penjualan->id }}</span>  
+        <div class="text-xs sm:text-sm text-slate-500 mt-1">
+            ID Transaksi: 
+            <span class="font-semibold">{{ $penjualan->id }}</span>
             • {{ $penjualan->waktu }}
         </div>
     </div>
+
     <form action="{{ route('publik.tunai.bayar', $penjualan->id) }}" method="POST" id="formTunai">
     @csrf
 
+
     {{-- DAFTAR PRODUK --}}
-    <div class="bg-white rounded-xl shadow mb-4 overflow-hidden">
-
-        <div class="px-5 py-3 border-b bg-gray-50">
-            <h3 class="font-semibold text-gray-700">
-                Daftar Produk
-            </h3>
-        </div>
-
-        <div class="overflow-x-auto">
-        <table class="w-full">
-            <thead class="text-sm bg-gray-50 text-gray-600">
+    <div>
+        <table class="w-full text-xs sm:text-sm table-fixed">
+            <thead class="bg-slate-50 text-slate-600">
                 <tr>
-                    <th class="py-3 px-4 text-left">Produk</th>
-                    <th class="py-3 px-4 text-right">Harga</th>
-                    <th class="py-3 px-4 text-center">Jumlah</th>
-                    <th class="py-3 px-4 text-right">Subtotal</th>
+                    <th class="py-2 px-2 text-left w-[30%]">Produk</th>
+                    <th class="py-2 px-2 text-right w-[18%] whitespace-nowrap">Harga</th>
+                    <th class="py-2 px-2 text-center w-[28%]">Jumlah</th>
+                    <th class="py-2 px-2 text-right w-[24%] whitespace-nowrap">Subtotal</th>
                 </tr>
             </thead>
 
-            <tbody>
+            <tbody class="divide-y divide-slate-100">
             @foreach($details as $d)
             <tr data-row="detail"
-                data-harga="{{ (int) $d->harga_satuan }}"
-                class="border-t">
+                data-harga="{{ (int) $d->harga_satuan }}">
 
-                <td class="py-3 px-4 font-medium text-gray-700">
+                {{-- PRODUK --}}
+                <td class="py-2 px-2 font-medium text-slate-700 truncate">
                     {{ $d->nama_produk }}
                 </td>
 
-                <td class="py-3 px-4 text-right text-gray-700">
+                {{-- HARGA --}}
+                <td class="py-2 px-2 text-right text-slate-600 whitespace-nowrap">
                     Rp {{ number_format($d->harga_satuan, 0, ',', '.') }}
                 </td>
 
-                <td class="py-3 px-4 text-center">
+                {{-- JUMLAH --}}
+                <td class="py-2 px-2 text-center">
 
-                    <div class="inline-flex items-center border rounded-lg overflow-hidden">
+                    <div class="flex items-center justify-center border border-slate-300 rounded-lg overflow-hidden">
 
                         <button type="button"
-                            class="btn-minus px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700">
+                            class="btn-minus px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs">
                             −
                         </button>
 
                         <input type="number"
                             name="items[{{ $d->id }}][jumlah]"
-                            class="qty-input w-12 text-center outline-none"
+                            class="qty-input w-8 text-center text-xs outline-none"
                             min="1"
                             value="{{ $d->jumlah }}">
 
                         <button type="button"
-                            class="btn-plus px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700">
+                            class="btn-plus px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs">
                             +
                         </button>
                     </div>
@@ -92,73 +88,86 @@ input[type=number] {
                     <input type="hidden" name="items[{{ $d->id }}][id_produk]" value="{{ $d->id_produk }}">
                     <input type="hidden" name="items[{{ $d->id }}][harga_satuan]" value="{{ $d->harga_satuan }}">
                 </td>
-                <td class="py-3 px-4 text-right font-semibold subtotal-cell text-gray-800">
+
+                {{-- SUBTOTAL --}}
+                <td class="py-2 px-2 text-right font-semibold text-emerald-600 whitespace-nowrap subtotal-cell">
                     Rp {{ number_format($d->subtotal, 0, ',', '.') }}
                 </td>
+
             </tr>
             @endforeach
             </tbody>
         </table>
-        </div>
     </div>
-    {{-- RINGKASAN PEMBAYARAN --}}
-    <div class="bg-white rounded-xl shadow p-5 mb-4">
 
-        <h3 class="font-semibold text-gray-700 mb-3">
+
+    {{-- RINGKASAN --}}
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 mb-5">
+
+        <h3 class="font-semibold text-slate-700 mb-4">
             Ringkasan Pembayaran
         </h3>
 
-        <div class="flex justify-between text-sm mb-2">
-            <span>Total Belanja</span>
-            <span id="totalText" class="font-semibold">
+        <div class="flex justify-between items-center text-sm mb-3">
+            <span class="text-slate-600">Total Belanja</span>
+            <span id="totalText" class="text-lg font-bold text-emerald-600">
                 Rp {{ number_format($penjualan->total_harga, 0, ',', '.') }}
             </span>
         </div>
 
         <input type="hidden" id="total_hidden" value="{{ (int)$penjualan->total_harga }}">
 
+        {{-- METODE --}}
         <div class="mt-4">
-            <label class="block text-sm mb-2 font-semibold">Metode Pembayaran</label>
-
-            <label class="flex items-center gap-2">
-                <input type="radio" name="metode_pembayaran" value="tunai" checked>
-                Tunai
+            <label class="block text-sm font-semibold mb-2">
+                Metode Pembayaran
             </label>
 
-            <label class="flex items-center gap-2">
-                <input type="radio" name="metode_pembayaran" value="qris">
-                QRIS
-            </label>
+            <div class="space-y-2 text-sm">
+                <label class="flex items-center gap-2">
+                    <input type="radio" name="metode_pembayaran" value="tunai" checked>
+                    Tunai
+                </label>
+
+                <label class="flex items-center gap-2">
+                    <input type="radio" name="metode_pembayaran" value="qris">
+                    QRIS
+                </label>
+            </div>
         </div>
 
+        {{-- QRIS INFO --}}
         <div id="qrisBox"
-            class="hidden mt-3 p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-sm text-emerald-700">
+            class="hidden mt-4 p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-sm text-emerald-700">
             Anda akan diarahkan ke halaman pembayaran QRIS.
         </div>
 
+        {{-- TUNAI --}}
         <div id="tunaiBox" class="mt-4">
             <label class="text-sm block mb-1">Jumlah Bayar</label>
             <input type="number"
                 name="jumlah_bayar"
                 id="jumlah_bayar"
-                class="w-full border p-2 rounded"
+                class="w-full border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-emerald-400 outline-none"
                 placeholder="Masukkan nominal tunai">
         </div>
 
-        <div class="mt-3 text-sm">
-            <strong>Kembali:</strong>
-            <span id="kembaliText">Rp 0</span>
+        <div class="mt-4 text-sm">
+            <span class="font-semibold">Kembali:</span>
+            <span id="kembaliText" class="text-emerald-600 font-semibold">
+                Rp 0
+            </span>
         </div>
 
     </div>
 
-    {{-- TOMBOL AKSI --}}
-    <div class="bg-white rounded-xl shadow p-4 flex gap-3">
+    {{-- ACTION BUTTON --}}
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex flex-col sm:flex-row gap-3">
 
         <button type="submit"
             name="action"
             value="cart"
-            class="px-4 py-2 border border-emerald-500 text-emerald-600 rounded-lg hover:bg-emerald-50">
+            class="border border-emerald-500 text-emerald-600 py-2.5 rounded-xl hover:bg-emerald-50 transition">
             🛒 Ke Keranjang
         </button>
 
@@ -166,7 +175,7 @@ input[type=number] {
             name="action"
             value="pay"
             id="btnBayar"
-            class="flex-1 bg-emerald-500 text-white py-2 rounded-lg hover:bg-emerald-600">
+            class="flex-1 bg-emerald-500 text-white py-2.5 rounded-xl font-semibold hover:bg-emerald-600 transition">
             Bayar
         </button>
 
@@ -176,8 +185,8 @@ input[type=number] {
 
 </div>
 </div>
-
 @endsection
+
 
 @push('scripts')
 <script>

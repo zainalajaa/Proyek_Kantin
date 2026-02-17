@@ -7,7 +7,7 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-7">
 
         {{-- TOTAL PRODUK --}}
-        <div class="relative overflow-hidden rounded-3xl p-6 text-white shadow-xl
+        <div class="relative overflow-hidden rounded-2xl p-6 text-white shadow-xl
                     bg-gradient-to-br from-blue-500 to-blue-700
                     transition duration-300 hover:scale-105">
 
@@ -28,7 +28,7 @@
 
 
         {{-- TOTAL MAKANAN --}}
-        <div class="relative overflow-hidden rounded-3xl p-6 text-white shadow-xl
+        <div class="relative overflow-hidden rounded-2xl p-6 text-white shadow-xl
                     bg-gradient-to-br from-yellow-400 to-orange-500
                     transition duration-300 hover:scale-105">
 
@@ -49,7 +49,7 @@
 
 
         {{-- TOTAL MINUMAN --}}
-        <div class="relative overflow-hidden rounded-3xl p-6 text-white shadow-xl
+        <div class="relative overflow-hidden rounded-2xl p-6 text-white shadow-xl
                     bg-gradient-to-br from-emerald-400 to-teal-600
                     transition duration-300 hover:scale-105">
 

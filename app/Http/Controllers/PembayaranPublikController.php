@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Penjualan;
 use App\Models\Produk;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class PembayaranPublikController extends Controller

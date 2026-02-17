@@ -67,58 +67,53 @@ class CheckoutController extends Controller
      */
     public function checkout(Request $request)
     {
-        $itemsInput = $request->input('items', []);
+        $cart = Session::get('cartItems', []);
 
-        // kalau user hapus semua di frontend
-        if (empty($itemsInput)) {
-            Session::forget(['cartItems', 'cart_total', 'cart_count']);
-
+        if (empty($cart)) {
             return redirect()
                 ->route('cart.index')
-                ->with('error', 'Tidak ada produk yang dikirim dari keranjang.');
+                ->with('error', 'Keranjang kosong.');
         }
 
-        $newCart       = []; // sisa keranjang
-        $selectedItems = []; // yang dicentang
-        $total         = 0;
+        $itemsInput = $request->input('items', []);
 
-        foreach ($itemsInput as $key => $row) {
-            $idProduk = $row['id_produk']   ?? null;
-            $nama     = $row['nama_produk'] ?? '';
-            $harga    = (int)($row['harga'] ?? 0);
-            $qty      = max((int)($row['jumlah'] ?? 0), 1);
+        $selectedItems = [];
+        $newCart = [];
+        $total = 0;
 
-            if (!$idProduk || $harga <= 0) {
+        foreach ($cart as $key => $item) {
+
+            $row = $itemsInput[$key] ?? null;
+
+            // Kalau tidak ada data dari frontend, anggap tidak dicentang
+            if (!$row) {
+                $newCart[$key] = $item;
                 continue;
             }
 
-            $line = [
-                'id_produk'    => $idProduk,
-                'nama_produk'  => $nama,
-                'harga_satuan' => $harga,
-                'jumlah'       => $qty,
-                'subtotal'     => $harga * $qty,
-            ];
-
+            $qty = max((int)($row['jumlah'] ?? $item['jumlah']), 1);
             $isChecked = isset($row['checked']);
 
+            $line = [
+                'id_produk'    => $item['id_produk'],
+                'nama_produk'  => $item['nama_produk'],
+                'harga_satuan' => $item['harga_satuan'],
+                'jumlah'       => $qty,
+                'subtotal'     => $item['harga_satuan'] * $qty,
+            ];
+
             if ($isChecked) {
-                // masuk transaksi
                 $selectedItems[] = $line;
-                $total          += $line['subtotal'];
+                $total += $line['subtotal'];
             } else {
-                // tetap disimpan di keranjang
                 $newCart[$key] = $line;
             }
         }
 
-        // update isi keranjang di session (setelah ada yang dipilih / dihapus)
-        $cart_total = collect($newCart)->sum('subtotal');
-        $cart_count = count($newCart); // JUMLAH PRODUK BERBEDA YANG MASIH DI KERANJANG
-
+        // Update sisa keranjang
         Session::put('cartItems', $newCart);
-        Session::put('cart_total', $cart_total);
-        Session::put('cart_count', $cart_count);
+        Session::put('cart_total', collect($newCart)->sum('subtotal'));
+        Session::put('cart_count', count($newCart));
 
         if (empty($selectedItems)) {
             return redirect()
@@ -128,7 +123,7 @@ class CheckoutController extends Controller
 
         DB::beginTransaction();
         try {
-            // buat penjualan pending (default tunai)
+
             $penjualan = Penjualan::create([
                 'waktu'             => now(),
                 'total_harga'       => $total,
@@ -152,14 +147,16 @@ class CheckoutController extends Controller
             return redirect()->route('publik.tunai.detail', $penjualan->id);
 
         } catch (\Throwable $e) {
+
             DB::rollBack();
             report($e);
 
             return redirect()
                 ->route('cart.index')
-                ->with('error', 'Terjadi kesalahan saat membuat transaksi dari keranjang.');
+                ->with('error', 'Terjadi kesalahan saat membuat transaksi.');
         }
     }
+
 
     public function remove(Request $request)
     {

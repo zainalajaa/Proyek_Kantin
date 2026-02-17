@@ -144,7 +144,6 @@ Route::post('/cart/remove', [CheckoutController::class, 'remove'])
     ->name('cart.remove');
 
 
-
 Route::post('/publik/transaksi/{penjualan}/tambah-produk', 
     [PenjualanPublikController::class, 'tambahProduk']
 )->name('publik.transaksi.tambahProduk');
