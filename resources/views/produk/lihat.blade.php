@@ -1,5 +1,5 @@
 @extends('layouts.admin')
-@section('title', 'Data Produk')
+@section('title', 'Produk')
 
 @section('content')
 <div class="px-4 md:px-6 py-4 space-y-4">
