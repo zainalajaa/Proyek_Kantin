@@ -12,23 +12,14 @@ class ProdukController extends Controller
     /**
      * Tampilkan daftar produk (admin)
      */
-    public function index(Request $request)
+   public function index()
     {
-        $search = $request->search;
+        $produks = Produk::with('kategori')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
 
-        $query = Produk::query();
-
-        if ($search) {
-            $query->where('nama_produk', 'like', '%' . $search . '%');
-        }
-
-        $produks = $query->orderBy('created_at', 'desc')
-                        ->paginate(12)
-                        ->withQueryString();
-
-        return view('publik.index', compact('produks', 'search'));
+        return view('produk.lihat', compact('produks'));
     }
-
 
     /**
      * Form tambah produk

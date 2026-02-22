@@ -1,16 +1,17 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\AdminController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\ProdukController;
-use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\Admin\PenjualanController;
-use App\Http\Controllers\PenjualanPublikController;
+
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AdminProfileController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PembayaranPublikController;
+use App\Http\Controllers\PenjualanPublikController;
+use App\Http\Controllers\ProdukController;
 use App\Http\Controllers\StockCheckController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -47,30 +48,44 @@ Route::prefix('admin')
     ->middleware('auth:admin')
     ->group(function () {
 
+
+    
         // PRODUK
         Route::get('/produk', [ProdukController::class, 'index'])->name('produk.lihat');
-
         Route::get('/produk/tambah', [ProdukController::class, 'create'])->name('produk.tambah');
-
         Route::post('/produk', [ProdukController::class, 'store'])->name('produk.store');
-
         Route::get('/produk/{produk}/edit', [ProdukController::class, 'edit'])->name('produk.edit');
-
         Route::put('/produk/{produk}', [ProdukController::class, 'update'])->name('produk.update');
-
         Route::delete('/produk/{produk}', [ProdukController::class, 'destroy'])->name('produk.destroy');
-
 
         // PENJUALAN (ADMIN)
         Route::get('/penjualan', [PenjualanController::class, 'index'])->name('penjualan.index');
-
         Route::get('/penjualan/{id}', [PenjualanController::class, 'show'])->name('penjualan.show');
 
-        Route::get('/monitoring-stock', [StockCheckController::class, 'index'])->name('monitoring_stok');
+        // MONITORING STOK
+        Route::get('/monitoring-stock', [StockCheckController::class, 'index'])
+            ->name('monitoring_stok');
 
-        Route::post('/monitoring-stock', [StockCheckController::class, 'store'])->name('monitoring_stok.store');
+        Route::post('/monitoring-stock', [StockCheckController::class, 'store'])
+            ->name('monitoring_stok.store');
 
-        Route::get('/monitoring-stock/riwayat',[StockCheckController::class, 'riwayat'])->name('monitoring_stok.riwayat');
+        // 🔥 PINDAHKAN RIWAYAT KE ATAS
+        Route::get('/monitoring-stock/riwayat', [StockCheckController::class, 'riwayat'])
+            ->name('monitoring_stok.riwayat');
+
+        Route::get('/monitoring-stock/{id}/edit', [StockCheckController::class, 'edit'])
+            ->name('monitoring_stok.edit');
+
+        Route::put('/monitoring-stock/{id}', [StockCheckController::class, 'update'])
+            ->name('monitoring_stok.update');
+
+        Route::get('/admin/profile', [AdminProfileController::class, 'edit'])->name('admin.profile');
+
+        Route::get('/profile', [AdminProfileController::class, 'edit'])->name('profile');
+
+        Route::post('/profile', [AdminProfileController::class, 'update'])->name('profile.update');
+
+        Route::delete('/profile/photo', [AdminProfileController::class, 'deletePhoto'])->name('profile.photo.delete');
 });
 
 
@@ -81,9 +96,9 @@ Route::prefix('admin')
 */
 
 // Halaman utama pembeli
-Route::get('/', [ProdukController::class, 'publicPage'])->name('publik.index');
+// Route::get('/', [ProdukController::class, 'publicPage'])->name('publik.index');
 // Pencarian Produk
-Route::get('/', [ProdukController::class, 'index'])->name('publik.index');
+Route::get('/', [PenjualanPublikController::class, 'tampil'])->name('publik.index');
 
 
 // BELI PRODUK LANGSUNG
@@ -129,5 +144,4 @@ Route::post('/pembayaran/{id}/qris', [PembayaranPublikController::class, 'submit
 
 // TRANSAKSI SELESAI
 Route::get('/publik/transaksi/selesai/{id}',  [PembayaranPublikController::class, 'transaksiSelesai'])->name('publik.transaksi.selesai');
-
 

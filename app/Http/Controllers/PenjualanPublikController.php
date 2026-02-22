@@ -12,6 +12,23 @@ use Illuminate\Support\Facades\Session;
 
 class PenjualanPublikController extends Controller
 {
+
+    public function tampil(Request $request)
+    {
+        $search = $request->search;
+
+        $query = Produk::with('kategori');
+
+        if ($search) {
+            $query->where('nama_produk', 'like', '%' . $search . '%');
+        }
+
+        $produks = $query->orderBy('created_at', 'desc')
+                        ->paginate(12)
+                        ->withQueryString();
+
+        return view('publik.index', compact('produks', 'search'));
+    }
     /**
      * Membuat transaksi baru saat klik BELI produk
      */
