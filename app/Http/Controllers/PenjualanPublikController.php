@@ -307,7 +307,7 @@ class PenjualanPublikController extends Controller
             DB::rollBack();
             report($e);
 
-            return back()->with('error', 'Terjadi kesalahan saat memproses pembayaran.');
+            return back()->with('error', 'Pembelian produk melebihi stok yang tersedia, Periksa ketersedian stok dan lakukan pembayaran sesuai dengan jumlah produk yang tersedia.');
         }
     }
 

@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\Admin\PenjualanController;
 
-use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminProfileController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CheckoutController;

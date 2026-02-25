@@ -32,7 +32,7 @@ export default defineConfig({
 //         port: 5173,
 //         strictPort: true,
 //         hmr: {
-//             host: '192.168.0.108',
+//             host: '192.168.0.115', 
 //         },
 //     },
 //     plugins: [

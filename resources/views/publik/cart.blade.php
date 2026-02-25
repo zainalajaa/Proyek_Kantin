@@ -3,193 +3,199 @@
 @section('title', 'Keranjang Belanja')
 
 @section('content')
-<div class="bg-slate-900 min-h-screen">
-    <div class="max-w-7xl mx-auto px-4 py-6">
-        <h1 class="text-xl font-bold text-slate-100 mb-4">Keranjang Belanja</h1>
+
+<div class="min-h-screen bg-slate-50 py-10">
+    <div class="max-w-6xl mx-auto px-4">
+
+        <h1 class="text-2xl font-bold text-slate-800 mb-8">
+            Keranjang Belanja
+        </h1>
 
         @php
             $cartItems = session('cartItems', []);
             $cartTotal = session('cart_total', 0);
         @endphp
 
-        @if (empty($cartItems))
-            <p class="text-slate-400">Keranjang masih kosong.</p>
-        @else
-            <form action="{{ route('cart.checkout') }}" method="POST" id="cartForm">
-                @csrf
-            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5">
 
-                {{-- ================= MOBILE VIEW ================= --}}
-                <div class="md:hidden space-y-4">
+        @if (empty($cartItems))
+
+            <div class="bg-white rounded-3xl shadow-sm p-10 text-center">
+                <p class="text-slate-500 text-sm">
+                    Keranjang masih kosong.
+                </p>
+            </div>
+
+        @else
+
+        <form action="{{ route('cart.checkout') }}" method="POST" id="cartForm">
+        @csrf
+
+        <div class="bg-white rounded-3xl shadow-sm p-6">
+
+            {{-- ================= MOBILE VIEW ================= --}}
+            <div class="md:hidden space-y-6">
+                @foreach($cartItems as $key => $item)
+                <div class="cart-row border border-slate-100 rounded-2xl p-5 transition hover:shadow-sm"
+                     data-key="{{ $key }}"
+                     data-harga="{{ (int) $item['harga_satuan'] }}">
+
+                    <div class="flex justify-between items-start">
+
+                        <label class="flex items-start gap-3">
+                            <input type="checkbox"
+                                   name="items[{{ $key }}][checked]"
+                                   class="item-check accent-emerald-500 mt-1">
+
+                            <div>
+                                <div class="font-semibold text-slate-800">
+                                    {{ $item['nama_produk'] }}
+                                </div>
+
+                                <div class="text-sm text-slate-500 mt-1">
+                                    Rp {{ number_format($item['harga_satuan'], 0, ',', '.') }}
+                                </div>
+                            </div>
+                        </label>
+
+                        <button type="button"
+                                class="btn-remove text-xs font-medium text-red-500 hover:text-red-600 transition">
+                            Hapus
+                        </button>
+                    </div>
+
+                    <div class="flex justify-between items-center mt-5">
+
+                        <div class="inline-flex items-center border border-slate-200 rounded-xl overflow-hidden">
+
+                            <button type="button"
+                                    class="btn-minus px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-sm">
+                                −
+                            </button>
+
+                            <input type="number"
+                                   name="items[{{ $key }}][jumlah]"
+                                   value="{{ $item['jumlah'] }}"
+                                   min="1"
+                                   class="qty-input w-12 text-center text-sm outline-none">
+
+                            <button type="button"
+                                    class="btn-plus px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-sm">
+                                +
+                            </button>
+                        </div>
+
+                        <div class="subtotal-cell text-emerald-600 font-bold whitespace-nowrap">
+                            Rp {{ number_format($item['subtotal'], 0, ',', '.') }}
+                        </div>
+                    </div>
+
+                    <input type="hidden" name="items[{{ $key }}][id_produk]" value="{{ $item['id_produk'] }}">
+                    <input type="hidden" name="items[{{ $key }}][harga]" value="{{ (int) $item['harga_satuan'] }}">
+                    <input type="hidden" name="items[{{ $key }}][nama_produk]" value="{{ $item['nama_produk'] }}">
+
+                </div>
+                @endforeach
+            </div>
+
+
+            {{-- ================= DESKTOP VIEW ================= --}}
+            <div class="hidden md:block overflow-x-auto desktop-view">
+
+                <table class="w-full text-sm">
+                    <thead class="border-b text-slate-500">
+                        <tr>
+                            <th class="py-4 text-left">Produk</th>
+                            <th class="py-4 text-right">Harga</th>
+                            <th class="py-4 text-center">Jumlah</th>
+                            <th class="py-4 text-right">Subtotal</th>
+                            <th class="py-4 text-center">✕</th>
+                        </tr>
+                    </thead>
+
+                    <tbody class="divide-y divide-slate-100">
                     @foreach($cartItems as $key => $item)
-                    <div class="cart-row bg-slate-800 border border-slate-700 p-4 rounded-xl space-y-3"
+                    <tr class="cart-row hover:bg-slate-50 transition"
                         data-key="{{ $key }}"
                         data-harga="{{ (int) $item['harga_satuan'] }}">
 
-                        <div class="flex justify-between items-center">
-                            <label class="flex items-center gap-2">
+                        <td class="py-5 text-slate-800">
+                            <label class="flex items-center gap-3">
                                 <input type="checkbox"
-                                    name="items[{{ $key }}][checked]"
-                                    class="item-check accent-emerald-500">
-
-                                <span class="font-semibold text-slate-100">
-                                    {{ $item['nama_produk'] }}
-                                </span>
+                                       name="items[{{ $key }}][checked]"
+                                       class="item-check accent-emerald-500">
+                                {{ $item['nama_produk'] }}
                             </label>
+                        </td>
 
-                            <button type="button"
-                                class="btn-remove px-3 py-1 rounded-lg bg-red-500/10 text-red-400 text-xs font-semibold hover:bg-red-500 hover:text-white transition"
-                                title="Hapus dari keranjang">
-                                Hapus
-                            </button>
+                        <td class="py-5 text-right text-slate-600 whitespace-nowrap">
+                            Rp {{ number_format($item['harga_satuan'], 0, ',', '.') }}
+                        </td>
 
-
-                        </div>
-
-                        <div class="flex justify-between text-sm text-slate-300">
-                            <span>Harga</span>
-                            <span class="whitespace-nowrap">
-                                Rp {{ number_format($item['harga_satuan'], 0, ',', '.') }}
-                            </span>
-                        </div>
-
-                        <div class="flex justify-between items-center">
-
-                            <div class="inline-flex items-center bg-slate-700 rounded-lg overflow-hidden">
-
+                        <td class="py-5 text-center">
+                            <div class="inline-flex items-center border border-slate-200 rounded-xl overflow-hidden">
                                 <button type="button"
-                                    class="btn-minus px-3 py-1 text-slate-200 hover:bg-slate-600 transition">
+                                        class="btn-minus px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-sm">
                                     −
                                 </button>
 
                                 <input type="number"
-                                    name="items[{{ $key }}][jumlah]"
-                                    value="{{ $item['jumlah'] }}"
-                                    min="1"
-                                    class="qty-input w-12 text-center text-sm bg-slate-900 text-white outline-none">
+                                       name="items[{{ $key }}][jumlah]"
+                                       value="{{ $item['jumlah'] }}"
+                                       min="1"
+                                       class="qty-input w-12 text-center text-sm outline-none">
 
                                 <button type="button"
-                                    class="btn-plus px-3 py-1 text-slate-200 hover:bg-slate-600 transition">
+                                        class="btn-plus px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-sm">
                                     +
                                 </button>
                             </div>
+                        </td>
 
-                            <div class="text-emerald-400 font-bold subtotal-cell whitespace-nowrap">
-                                Rp {{ number_format($item['subtotal'], 0, ',', '.') }}
-                            </div>
-                        </div>
+                        <td class="subtotal-cell py-5 text-right font-semibold text-emerald-600 whitespace-nowrap">
+                            Rp {{ number_format($item['subtotal'], 0, ',', '.') }}
+                        </td>
 
-                        <input type="hidden" name="items[{{ $key }}][id_produk]" value="{{ $item['id_produk'] }}">
-                        <input type="hidden" name="items[{{ $key }}][harga]" value="{{ (int) $item['harga_satuan'] }}">
-                        <input type="hidden" name="items[{{ $key }}][nama_produk]" value="{{ $item['nama_produk'] }}">
+                        <td class="py-5 text-center">
+                            <button type="button"
+                                    class="btn-remove text-xs font-medium text-red-500 hover:text-red-600 transition">
+                                Hapus
+                            </button>
+                        </td>
 
-                    </div>
+                    </tr>
                     @endforeach
-                </div>
+                    </tbody>
+                </table>
+
+            </div>
 
 
-                {{-- ================= DESKTOP VIEW ================= --}}
-                <div class="hidden md:block overflow-x-auto desktop-view">
-                    <table class="w-full text-sm">
-                        <thead class="text-slate-400 border-b border-slate-700">
-                            <tr>
-                                <th class="py-3 text-left">Produk</th>
-                                <th class="py-3 text-right">Harga</th>
-                                <th class="py-3 text-center">Jumlah</th>
-                                <th class="py-3 text-right">Subtotal</th>
-                                <th class="py-3 text-center">✕</th>
-                            </tr>
-                        </thead>
+            {{-- FOOTER SUMMARY --}}
+            <div class="mt-10 pt-8 border-t">
 
-                        <tbody class="divide-y divide-slate-700">
-                        @foreach($cartItems as $key => $item)
-                        <tr class="cart-row"
-                            data-key="{{ $key }}"
-                            data-harga="{{ (int) $item['harga_satuan'] }}">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
 
-                            <td class="py-3 text-slate-100">
-                                <label class="flex items-center gap-2">
-                                    <input type="checkbox"
-                                        name="items[{{ $key }}][checked]"
-                                        class="item-check accent-emerald-500">
-                                    {{ $item['nama_produk'] }}
-                                </label>
-                            </td>
-
-                            <td class="py-3 text-right whitespace-nowrap text-slate-300">
-                                Rp {{ number_format($item['harga_satuan'], 0, ',', '.') }}
-                            </td>
-
-                            <td class="py-3 text-center">
-                                <div class="inline-flex items-center bg-slate-700 rounded-lg overflow-hidden">
-                                    <button type="button"
-                                        class="btn-minus px-2 py-1 text-slate-200 hover:bg-slate-600 transition">
-                                        −
-                                    </button>
-
-                                    <input type="number"
-                                        name="items[{{ $key }}][jumlah]"
-                                        value="{{ $item['jumlah'] }}"
-                                        min="1"
-                                        class="qty-input w-12 text-center text-sm bg-slate-900 text-white outline-none">
-
-                                    <button type="button"
-                                        class="btn-plus px-2 py-1 text-slate-200 hover:bg-slate-600 transition">
-                                        +
-                                    </button>
-                                </div>
-                            </td>
-
-                            <td class="py-3 text-right font-semibold text-emerald-400 whitespace-nowrap subtotal-cell">
-                                Rp {{ number_format($item['subtotal'], 0, ',', '.') }}
-                            </td>
-
-                            <td class="py-3 text-center">
-                                <button type="button"
-                                    class="btn-remove px-3 py-1 rounded-lg bg-red-500/10 text-red-400 text-xs font-semibold hover:bg-red-500 hover:text-white transition"
-                                    title="Hapus dari keranjang">
-                                    Hapus
-                                </button>
-                            </td>
-
-                        </tr>
-                        @endforeach
-                        </tbody>
-                    </table>
-                </div>
-
-
-                    {{-- FOOTER --}}
-                    <div class="mt-6 text-center space-y-4">
-
-                        <div class="text-lg font-bold text-emerald-400">
-                            Total Terpilih:
-                            <span id="selectedTotal">Rp 0</span>
-                            <input type="hidden" name="total_checkout" id="totalCheckout" value="0">
-                        </div>
-
-                        <button type="submit"
-                            class="bg-emerald-500 text-white px-8 py-3 rounded-xl font-semibold hover:bg-emerald-600 transition">
-                            Bayar Produk Terpilih
-                        </button>
-
+                    <div class="text-xl font-bold text-emerald-600">
+                        Total Terpilih:
+                        <span id="selectedTotal">Rp 0</span>
+                        <input type="hidden" name="total_checkout" id="totalCheckout" value="0">
                     </div>
 
+                    <button type="submit"
+                            class="bg-emerald-500 text-white px-10 py-3 rounded-2xl font-semibold hover:bg-emerald-600 transition shadow-sm">
+                        Bayar Produk Terpilih
+                    </button>
+
                 </div>
 
+            </div>
 
-            </form>
+        </div>
+
+        </form>
         @endif
+
     </div>
-</div>
-{{-- NOTIFICATION CONTAINER --}}
-<div id="toast"
-     class="fixed top-5 left-5
-            bg-slate-800 border border-slate-700
-            text-slate-100
-            px-4 py-2 rounded-lg shadow-lg
-            hidden z-50 text-sm
-            transition-all duration-300">
 </div>
 
 @endsection

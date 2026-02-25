@@ -22,10 +22,10 @@
     <div class="relative z-10 p-8 flex flex-col justify-center bg-white">
 
       <!-- Logo Lebih Kecil -->
-      <div class="flex justify-center mb-4">
+      <div class="flex justify-center">
         <img src="{{ asset('storage/images/logo-kj.png') }}" 
              alt="Logo KJ"
-             class="w-28 md:w-32 h-auto object-contain">
+             class="w-28 md:w-25 h-auto object-contain">
       </div>
 
       <!-- Title -->

@@ -21,7 +21,7 @@
                 {{-- Kiri: logo + judul --}}
                 <div class="flex items-center gap-3">
                     @php
-                        $logoPath = 'storage/images/logo-kantin.png';
+                        $logoPath = 'storage/images/logo-kj.png';
                     @endphp
 
                     @if (file_exists(public_path($logoPath)))
@@ -82,21 +82,23 @@
 
         @if(session('success'))
             <div id="flash-success"
-                class="flash-message mb-4 flex items-center gap-3 
-                    rounded-2xl border border-emerald-500/40 
-                    bg-slate-800 text-emerald-300 
-                    px-4 py-3 shadow-lg transition-all duration-500">
+                class="flash-message mb-6 flex items-center gap-4 
+                    rounded-2xl border border-emerald-200 
+                    bg-emerald-50 text-emerald-700 
+                    px-5 py-4 shadow-sm transition-all duration-500">
 
-                <div class="flex items-center justify-center h-8 w-8 rounded-lg bg-emerald-500/20">
+                <div class="flex items-center justify-center 
+                            h-9 w-9 rounded-xl 
+                            bg-emerald-100 text-emerald-600 font-bold">
                     ✓
                 </div>
 
-                <div class="flex-1 text-sm font-medium">
+                <div class="flex-1 text-sm font-semibold">
                     {{ session('success') }}
                 </div>
 
                 <button onclick="closeFlash('flash-success')"
-                    class="text-emerald-300 hover:text-white text-sm">
+                    class="text-emerald-500 hover:text-emerald-700 text-sm font-medium transition">
                     ✕
                 </button>
             </div>
@@ -104,19 +106,25 @@
 
         @if(session('error'))
             <div id="flash-error"
-                class="flash-message mb-4 flex items-center gap-3 
-                    rounded-2xl border border-red-500/40 
-                    bg-slate-800 text-red-300 
-                    px-4 py-3 shadow-lg transition-all duration-500">
+                class="flash-message mb-6 flex items-center gap-4 
+                    rounded-2xl border border-red-200 
+                    bg-red-50 text-red-700 
+                    px-5 py-4 shadow-sm transition-all duration-500">
 
-                <div class="flex items-center justify-center h-8 w-8 rounded-lg bg-red-500/20">
+                <div class="flex items-center justify-center 
+                            h-9 w-9 rounded-xl 
+                            bg-red-100 text-red-600 font-bold">
                     ⚠
                 </div>
 
-                <div class="flex-1 text-sm font-medium">
+                <div class="flex-1 text-sm font-semibold">
                     {{ session('error') }}
                 </div>
 
+                <button onclick="closeFlash('flash-error')"
+                    class="text-red-500 hover:text-red-700 text-sm font-medium transition">
+                    ✕
+                </button>
             </div>
         @endif
     </div>
