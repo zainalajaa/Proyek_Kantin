@@ -26,7 +26,7 @@
                  class="w-24 h-auto object-contain">
         </div>
 
-        <nav class="flex-1 overflow-y-auto space-y-2 text-sm font-medium px-4 pb-4 mt-2">
+        <nav class="flex-1 overflow-y-auto space-y-2 text-sm font-medium px-4 pb-2 mt-2">
 
             <a href="{{ route('admin.dashboard') }}"
                class="flex items-center gap-3 px-4 py-3 rounded-lg
@@ -100,12 +100,10 @@
     </aside>
 
     {{-- Overlay --}}
-    <div id="overlay"
-         class="fixed inset-0 bg-black/40 hidden z-30 md:hidden"></div>
+    <div id="overlay" class="fixed inset-0 bg-black/40 hidden z-30 md:hidden"></div>
 
     {{-- MAIN CONTENT --}}
-    <div id="mainContent"
-        class="min-h-screen transition-all duration-300 md:ml-64">
+    <div id="mainContent" class="min-h-screen transition-all duration-300 md:ml-64">
 
         @php
             $admin = auth('admin')->user();
@@ -186,36 +184,68 @@ document.addEventListener("DOMContentLoaded", function () {
     const overlay = document.getElementById("overlay");
     const toggleBtn = document.getElementById("toggleSidebar");
     const mainContent = document.getElementById("mainContent");
+
     const profileBtn = document.getElementById("profileBtn");
     const profileDropdown = document.getElementById("profileDropdown");
 
-    // ======================
+    function isDesktop() {
+        return window.innerWidth >= 768;
+    }
+
+    function openSidebar() {
+        sidebar.style.transform = "translateX(0)";
+        if (isDesktop()) mainContent.style.marginLeft = "16rem";
+        overlay.classList.add("hidden");
+    }
+
+    function closeSidebar() {
+        sidebar.style.transform = "translateX(-100%)";
+        mainContent.style.marginLeft = "0";
+        overlay.classList.add("hidden");
+    }
+
+    // INIT
+    if (isDesktop()) {
+        openSidebar();
+    } else {
+        closeSidebar();
+    }
+
     // TOGGLE SIDEBAR
-    // ======================
-    toggleBtn.addEventListener("click", function (e) {
+    toggleBtn.addEventListener("click", function () {
 
-        e.stopPropagation();
+        if (sidebar.style.transform === "translateX(-100%)") {
 
-        if (window.innerWidth >= 768) {
-            mainContent.classList.toggle("md:ml-64");
-            sidebar.classList.toggle("md:-translate-x-full");
+            sidebar.style.transform = "translateX(0)";
+
+            if (isDesktop()) {
+                mainContent.style.marginLeft = "16rem";
+            } else {
+                overlay.classList.remove("hidden");
+            }
+
         } else {
-            sidebar.classList.toggle("-translate-x-full");
-            overlay.classList.toggle("hidden");
+
+            sidebar.style.transform = "translateX(-100%)";
+            mainContent.style.marginLeft = "0";
+            overlay.classList.add("hidden");
+
         }
 
     });
 
-    // ======================
-    // OVERLAY MOBILE
-    // ======================
-    overlay.addEventListener("click", function () {
-        sidebar.classList.add("-translate-x-full");
-        overlay.classList.add("hidden");
+    overlay.addEventListener("click", closeSidebar);
+
+    window.addEventListener("resize", function () {
+        if (isDesktop()) {
+            openSidebar();
+        } else {
+            closeSidebar();
+        }
     });
 
     // ======================
-    // PROFILE DROPDOWN
+    // PROFILE DROPDOWN FIX
     // ======================
     profileBtn.addEventListener("click", function (e) {
         e.stopPropagation();
@@ -223,7 +253,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     document.addEventListener("click", function (e) {
-        if (!profileDropdown.contains(e.target) && e.target !== profileBtn) {
+        if (!profileDropdown.contains(e.target) && !profileBtn.contains(e.target)) {
             profileDropdown.classList.add("hidden");
         }
     });
