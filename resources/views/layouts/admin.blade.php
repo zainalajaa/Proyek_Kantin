@@ -13,24 +13,21 @@
 <div class="relative min-h-screen">
 
     {{-- SIDEBAR --}}
-    <aside id="sidebar"
-        class="fixed top-0 left-0 h-full w-64
-               bg-gradient-to-b from-emerald-900 via-emerald-800 to-emerald-700
-               text-white flex flex-col z-40
-               overflow-y-auto
-               transform -translate-x-full md:translate-x-0
-               transition-transform duration-300 ease-in-out">
+   <aside id="sidebar"
+    class="fixed top-0 left-0 h-full w-64
+           transform -translate-x-full md:translate-x-0
+           bg-gradient-to-b from-emerald-900 via-emerald-800 to-emerald-700
+           text-white flex flex-col z-40
+           overflow-y-auto
+           transition-all duration-300 ease-in-out">
 
-        {{-- Logo --}}
-        <div class="px-5">
+        <div class="px-5 pt-1">
             <img src="{{ asset('storage/images/logo-kj.png') }}"
-                 alt="Logo KJ"
                  class="w-24 h-auto object-contain">
         </div>
 
-        <nav class="flex-1 overflow-y-auto space-y-2 text-sm font-medium px-4 pb-6">
+        <nav class="flex-1 overflow-y-auto space-y-2 text-sm font-medium px-4 pb-4 mt-2">
 
-            {{-- Dashboard --}}
             <a href="{{ route('admin.dashboard') }}"
                class="flex items-center gap-3 px-4 py-3 rounded-lg
                transition-all duration-200 hover:bg-emerald-700
@@ -39,7 +36,6 @@
                 <span>Dashboard</span>
             </a>
 
-            {{-- Produk --}}
             <a href="{{ route('admin.produk.lihat') }}"
                class="relative flex items-center justify-between px-4 py-3 rounded-xl
                transition-all duration-200 hover:bg-emerald-700
@@ -51,23 +47,14 @@
                 </div>
 
                 @if(isset($totalLowStock) && $totalLowStock > 0)
-                    @if($criticalStock > 0)
-                        <span class="min-w-[22px] h-6 px-2 text-xs font-bold
-                                     bg-red-500 text-white animate-pulse
-                                     rounded-full flex items-center justify-center">
-                            {{ $totalLowStock }}
-                        </span>
-                    @else
-                        <span class="min-w-[22px] h-6 px-2 text-xs font-semibold
-                                     bg-amber-400 text-gray-900
-                                     rounded-full flex items-center justify-center">
-                            {{ $totalLowStock }}
-                        </span>
-                    @endif
+                    <span class="min-w-[22px] h-6 px-2 text-xs font-bold
+                        {{ $criticalStock > 0 ? 'bg-red-500 animate-pulse' : 'bg-amber-400 text-gray-900' }}
+                        text-white rounded-full flex items-center justify-center">
+                        {{ $totalLowStock }}
+                    </span>
                 @endif
             </a>
 
-            {{-- Penjualan --}}
             <a href="{{ route('admin.penjualan.index') }}"
                class="flex items-center gap-3 px-4 py-3 rounded-lg
                transition-all duration-200 hover:bg-emerald-700
@@ -76,7 +63,6 @@
                 <span>Penjualan</span>
             </a>
 
-            {{-- Monitoring Stok --}}
             <a href="{{ route('admin.monitoring_stok') }}"
                class="relative flex items-center justify-between px-4 py-3 rounded-xl
                transition-all duration-200 hover:bg-emerald-700
@@ -102,7 +88,6 @@
                 @endif
             </a>
 
-            {{-- Riwayat --}}
             <a href="{{ route('admin.monitoring_stok.riwayat') }}"
                class="flex items-center gap-3 px-4 py-3 rounded-lg
                transition-all duration-200 hover:bg-emerald-700
@@ -114,13 +99,13 @@
         </nav>
     </aside>
 
-   {{-- Overlay --}}
+    {{-- Overlay --}}
     <div id="overlay"
          class="fixed inset-0 bg-black/40 hidden z-30 md:hidden"></div>
 
     {{-- MAIN CONTENT --}}
     <div id="mainContent"
-         class="min-h-screen transition-all duration-300">
+        class="min-h-screen transition-all duration-300 md:ml-64">
 
         @php
             $admin = auth('admin')->user();
@@ -130,26 +115,23 @@
                 : 'https://ui-avatars.com/api/?name=' . urlencode($adminName);
         @endphp
 
-        {{-- NAVBAR --}}
         <header class="bg-white md:bg-emerald-50 border-b border-emerald-100
                        px-4 md:px-6 py-4
                        flex justify-between items-center sticky top-0 z-20">
 
             <div class="flex items-center gap-4">
 
-                {{-- TOMBOL TETAP ADA --}}
                 <button id="toggleSidebar"
                         class="text-2xl text-emerald-800">
                     ☰
                 </button>
 
                 <h1 class="text-base md:text-xl font-semibold text-emerald-900 truncate">
-                    @yield('title', 'Dashboard Admin')
+                    @yield('title')
                 </h1>
 
             </div>
 
-            {{-- PROFILE --}}
             <div class="flex items-center gap-3 relative">
 
                 <div class="hidden sm:flex flex-col items-end">
@@ -187,11 +169,8 @@
             </div>
         </header>
 
-        {{-- CONTENT --}}
         <main class="p-4 md:p-6">
-            <div class="w-full overflow-x-auto">
-                @yield('content')
-            </div>
+            @yield('content')
         </main>
 
     </div>
@@ -210,37 +189,34 @@ document.addEventListener("DOMContentLoaded", function () {
     const profileBtn = document.getElementById("profileBtn");
     const profileDropdown = document.getElementById("profileDropdown");
 
-    function openSidebar() {
-        sidebar.style.transform = "translateX(0)";
-        if (window.innerWidth < 768) {
-            overlay.classList.remove("hidden");
-        }
-        mainContent.style.paddingLeft = "16rem";
-    }
+    // ======================
+    // TOGGLE SIDEBAR
+    // ======================
+    toggleBtn.addEventListener("click", function (e) {
 
-    function closeSidebar() {
-        sidebar.style.transform = "translateX(-100%)";
-        overlay.classList.add("hidden");
-        mainContent.style.paddingLeft = "0";
-    }
+        e.stopPropagation();
 
-    // DEFAULT STATE
-    if (window.innerWidth >= 768) {
-        openSidebar(); // Desktop sidebar tampil default
-    } else {
-        closeSidebar(); // Mobile sidebar tersembunyi default
-    }
-
-    toggleBtn.addEventListener("click", function () {
-        if (sidebar.style.transform === "translateX(-100%)") {
-            openSidebar();
+        if (window.innerWidth >= 768) {
+            mainContent.classList.toggle("md:ml-64");
+            sidebar.classList.toggle("md:-translate-x-full");
         } else {
-            closeSidebar();
+            sidebar.classList.toggle("-translate-x-full");
+            overlay.classList.toggle("hidden");
         }
+
     });
 
-    overlay.addEventListener("click", closeSidebar);
+    // ======================
+    // OVERLAY MOBILE
+    // ======================
+    overlay.addEventListener("click", function () {
+        sidebar.classList.add("-translate-x-full");
+        overlay.classList.add("hidden");
+    });
 
+    // ======================
+    // PROFILE DROPDOWN
+    // ======================
     profileBtn.addEventListener("click", function (e) {
         e.stopPropagation();
         profileDropdown.classList.toggle("hidden");

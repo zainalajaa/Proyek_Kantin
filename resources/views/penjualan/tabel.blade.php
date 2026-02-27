@@ -97,7 +97,7 @@
     </div>
 
     <div class="mt-4">
-        {{ $penjualan->links() }}
+        {{ $penjualan->onEachSide(1)->links('pagination::simple-tailwind') }}
     </div>
 </div>
 @endsection

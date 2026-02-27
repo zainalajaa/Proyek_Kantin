@@ -1,6 +1,9 @@
 @extends('layouts.admin')
 
+@section('title', 'Dashboard')
+
 @section('content')
+
 <div class="px-6 py-8 space-y-10">
 
     {{-- ================= CARD STATISTIK ================= --}}
@@ -25,7 +28,6 @@
 
             <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-white opacity-10 rounded-full"></div>
         </div>
-
 
         {{-- TOTAL MAKANAN --}}
         <div class="relative overflow-hidden rounded-2xl p-6 text-white shadow-xl

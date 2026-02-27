@@ -5,10 +5,6 @@
 @section('content')
 
 <div class="container-fluid">
-
-    <!-- Judul Section -->
-    <h5 class="mb-3">Riwayat Selisih Stok</h5>
-
 <!-- CARD FILTER MODERN -->
 <div class="card border-0 shadow rounded-4 mb-4">
 
@@ -17,7 +13,7 @@
             <!-- HEADER HALAMAN -->
             <div class="mb-6 flex items-center justify-between">
                 <h1 class="text-xl font-bold text-gray-800">
-                    Riwayat Selisih Stok
+                    Cek Riwayat Stok
                 </h1>
                 <span class="text-sm text-gray-500">
                     Data Monitoring Historis

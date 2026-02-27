@@ -8,9 +8,6 @@
 
     <!-- HEADER -->
     <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-        <h1 class="text-xl font-bold text-gray-800">
-            Monitoring Stok
-        </h1>
         <span class="text-sm text-gray-500">
             {{ date('d M Y') }}
         </span>
