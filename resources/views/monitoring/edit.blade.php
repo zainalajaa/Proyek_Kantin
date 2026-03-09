@@ -8,7 +8,7 @@
 
     <div class="mb-6 flex items-center justify-between">
         <h1 class="text-xl font-bold text-gray-800">
-            Edit Monitoring Stok
+            Pastikan Stok Fisik sudah di hitung dengan benar 
         </h1>
         <a href="{{ route('admin.monitoring_stok') }}"
            class="text-sm text-blue-600 hover:underline">

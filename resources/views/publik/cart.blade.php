@@ -183,7 +183,7 @@
 
                     <button type="submit"
                             class="bg-emerald-500 text-white px-10 py-3 rounded-2xl font-semibold hover:bg-emerald-600 transition shadow-sm">
-                        Bayar Produk Terpilih
+                        Lanjutkan Pembayaran
                     </button>
 
                 </div>

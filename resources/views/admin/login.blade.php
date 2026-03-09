@@ -11,8 +11,7 @@
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 
-<body class="min-h-screen flex items-center justify-center 
-             bg-gradient-to-br from-[#00BFA5] via-[#00ACC1] to-[#FFD600] p-4">
+<body class="min-h-screen flex items-center justify-center bg-gray-100 p-4">
 
   <!-- Container Lebih Kecil -->
   <div class="w-full max-w-3xl bg-white rounded-2xl shadow-xl 
@@ -80,6 +79,12 @@
                  transition duration-300 shadow">
           Masuk
         </button>
+        <div class="text-right">
+          <a href="{{ route('password.request') }}" 
+            class="text-xs text-[#00ACC1] hover:underline">
+            Lupa Password?
+          </a>
+        </div>
       </form>
 
       <p class="mt-6 text-xs text-gray-500 text-center">

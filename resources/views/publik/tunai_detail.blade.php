@@ -21,7 +21,7 @@ input[type=number] {
     {{-- HEADER --}}
     <div class="bg-white rounded-3xl shadow-sm p-6 mb-6">
         <h2 class="text-2xl font-bold text-slate-800">
-            Checkout Pembayaran
+            Detail Pembayaran
         </h2>
 
         <div class="text-sm text-slate-500 mt-1">
@@ -162,6 +162,10 @@ input[type=number] {
                 id="jumlah_bayar"
                 class="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-emerald-400 outline-none"
                 placeholder="Masukkan nominal tunai">
+
+            <p id="errorTunai" class="text-red-500 text-sm mt-2 hidden">
+                Jumlah uang tunai untuk bayar harus lebih besar atau sama dengan total belanja.
+            </p>
         </div>
 
 
@@ -212,6 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const qrisBox     = document.getElementById('qrisBox');
     const tunaiBox    = document.getElementById('tunaiBox');
     const btnBayar    = document.getElementById('btnBayar');
+    const errorTunai  = document.getElementById('errorTunai');
 
     let currentTotal = parseInt(totalHidden.value) || 0;
 
@@ -257,9 +262,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function toggleMetode() {
+
         const metode = document.querySelector('input[name="metode_pembayaran"]:checked').value;
 
         if (metode === 'qris') {
+
             qrisBox.classList.remove('hidden');
             tunaiBox.classList.add('hidden');
 
@@ -269,6 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
             btnBayar.textContent = 'Lanjutkan Pembayaran QRIS';
 
         } else {
+
             qrisBox.classList.add('hidden');
             tunaiBox.classList.remove('hidden');
 
@@ -301,27 +309,40 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('input[name="metode_pembayaran"]')
         .forEach(r => r.addEventListener('change', toggleMetode));
 
-    inputBayar.addEventListener('input', updateKembali);
+    inputBayar.addEventListener('input', () => {
+
+        updateKembali();
+
+        const bayar = parseInt(inputBayar.value || 0);
+
+        if (bayar >= currentTotal) {
+
+            errorTunai.classList.add('hidden');
+            inputBayar.classList.remove('border-red-500');
+
+        }
+    });
 
     formTunai.addEventListener('submit', function(e) {
 
         const action = document.activeElement.value;
         const metode = document.querySelector('input[name="metode_pembayaran"]:checked').value;
 
-        
         if (action === 'pay' && metode === 'qris') {
-            // Biarkan form submit normal ke controller
             return true;
         }
-
 
         if (action === 'pay' && metode === 'tunai') {
 
             const bayar = parseInt(inputBayar.value || 0);
 
             if (!bayar || bayar < currentTotal) {
+
                 e.preventDefault();
-                alert('Jumlah bayar harus lebih besar atau sama dengan total.');
+
+                errorTunai.classList.remove('hidden');
+                inputBayar.classList.add('border-red-500');
+
             }
         }
     });
