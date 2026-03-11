@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Penjualan;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use App\Models\PenjualanDetail;
 
 class PenjualanController extends Controller
 {
