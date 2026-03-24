@@ -14,20 +14,24 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        // Validasi dulu
+        // Validasi + pesan custom Indonesia
         $credentials = $request->validate([
             'email'    => ['required', 'email'],
             'password' => ['required'],
+        ], [
+            'email.required'    => 'Email wajib diisi',
+            'email.email'       => 'Format email tidak valid',
+            'password.required' => 'Password wajib diisi',
         ]);
 
-        // Coba login pakai guard admin
+        // Proses login
         if (Auth::guard('admin')->attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
 
             return redirect()->intended(route('admin.dashboard'));
         }
 
-        // Kalau gagal
+        // Jika gagal login
         return back()
             ->withInput($request->only('email'))
             ->with('error', 'Email atau password salah!');

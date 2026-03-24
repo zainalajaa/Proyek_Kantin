@@ -66,40 +66,40 @@
         </div>
     @endif
 
-@if(!empty($tanggalBermasalah))
-    <div class="mb-6 rounded-xl bg-red-50 border border-red-200 p-4">
+    @if(!empty($tanggalBermasalah))
+        <div class="mb-6 rounded-xl bg-red-50 border border-red-200 p-4">
 
-        <h3 class="text-sm font-semibold text-red-700 mb-3">
-            ⚠ Riwayat Monitoring Bermasalah (30 Hari Terakhir)
-        </h3>
+            <h3 class="text-sm font-semibold text-red-700 mb-3">
+                ⚠ Riwayat Monitoring Bermasalah (30 Hari Terakhir)
+            </h3>
 
-        <div class="space-y-2 max-h-48 overflow-y-auto">
+            <div class="space-y-2 max-h-48 overflow-y-auto">
 
-            @foreach($tanggalBermasalah as $item)
-                <div class="flex justify-between items-center bg-white px-3 py-2 rounded-lg shadow-sm">
+                @foreach($tanggalBermasalah as $item)
+                    <div class="flex justify-between items-center bg-white px-3 py-2 rounded-lg shadow-sm">
 
-                    <span class="font-medium text-gray-700">
-                        {{ $item['tanggal'] }}
-                    </span>
-
-                    @if($item['status'] === 'tidak_input')
-                        <span class="text-xs font-semibold px-2 py-1 rounded-full bg-red-100 text-red-700">
-                            Tidak Ada Input
+                        <span class="font-medium text-gray-700">
+                            {{ $item['tanggal'] }}
                         </span>
-                    @else
-                        <span class="text-xs font-semibold px-2 py-1 rounded-full bg-amber-100 text-amber-700">
-                            Belum Selesai
-                        </span>
-                    @endif
 
-                </div>
-            @endforeach
+                        @if($item['status'] === 'tidak_input')
+                            <span class="text-xs font-semibold px-2 py-1 rounded-full bg-red-100 text-red-700">
+                                Tidak Ada Input
+                            </span>
+                        @else
+                            <span class="text-xs font-semibold px-2 py-1 rounded-full bg-amber-100 text-amber-700">
+                                Belum Selesai
+                            </span>
+                        @endif
 
+                    </div>
+                @endforeach
+
+            </div>
         </div>
-    </div>
-@endif
+    @endif
 
-    <!-- FORM MONITORING -->
+   <!-- FORM MONITORING -->
     <div class="bg-white shadow-sm rounded-xl p-4 sm:p-6 mb-6">
 
         <div class="mb-5">
@@ -115,22 +115,27 @@
             $produkSudahDicek = $checks->pluck('id_produk')->toArray();
         @endphp
 
-        <form action="{{ route('admin.monitoring_stok') }}" method="POST">
+        <form action="{{ route('admin.monitoring_stok') }}" method="POST" novalidate>
             @csrf
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4 items-start">
 
                 <!-- PRODUK -->
-                <div class="lg:col-span-6">
+                <div class="lg:col-span-6 flex flex-col">
                     <label class="block text-sm font-medium text-gray-600 mb-2">
                         Pilih Produk
                     </label>
+
                     <select name="id_produk"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-gray-300 outline-none"
-                        required>
+                        class="w-full border rounded-lg px-3 py-2 text-sm outline-none
+                        focus:ring-2 focus:ring-gray-300
+                        @error('id_produk') border-red-500 @else border-gray-300 @enderror">
+
                         <option value="">Pilih produk</option>
+
                         @foreach($produk as $p)
                             <option value="{{ $p->id_produk }}"
+                                {{ old('id_produk') == $p->id_produk ? 'selected' : '' }}
                                 {{ in_array($p->id_produk, $produkSudahDicek) ? 'disabled' : '' }}>
                                 {{ $p->nama_produk }}
                                 @if(in_array($p->id_produk, $produkSudahDicek))
@@ -139,31 +144,53 @@
                             </option>
                         @endforeach
                     </select>
+
+                    <div class="min-h-[18px]">
+                        @error('id_produk')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
                 </div>
 
                 <!-- STOK FISIK -->
-                <div class="lg:col-span-4">
+                <div class="lg:col-span-4 flex flex-col">
                     <label class="block text-sm font-medium text-gray-600 mb-2">
                         Stok Fisik
                     </label>
+
                     <input type="number"
                         name="stok_fisik"
                         min="0"
+                        value="{{ old('stok_fisik') }}"
                         placeholder="Masukkan jumlah"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-gray-300 outline-none"
-                        required>
+                        class="w-full border rounded-lg px-3 py-2 text-sm outline-none
+                        focus:ring-2 focus:ring-gray-300
+                        @error('stok_fisik') border-red-500 @else border-gray-300 @enderror">
+
+                    <div class="min-h-[18px]">
+                        @error('stok_fisik')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
                 </div>
 
                 <!-- BUTTON -->
-                <div class="lg:col-span-2 flex items-end">
+                <div class="lg:col-span-2 flex flex-col">
+                    <!-- label transparan untuk alignment -->
+                    <label class="block text-sm font-medium text-transparent mb-2">
+                        Aksi
+                    </label>
+
                     <button type="submit"
-                        class="w-full bg-gray-800 text-white py-3 rounded-lg text-sm font-semibold hover:bg-gray-700 transition">
+                        class="w-full bg-gray-800 text-white py-2 rounded-lg text-sm font-semibold hover:bg-gray-700 transition">
                         Simpan
                     </button>
+
+                    <!-- spacer biar sejajar dengan error -->
+                    <div class="min-h-[18px]"></div>
                 </div>
 
             </div>
-
         </form>
     </div>
 

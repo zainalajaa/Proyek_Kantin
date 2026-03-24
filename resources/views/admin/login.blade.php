@@ -43,42 +43,59 @@
       </div>
       @endif
 
-      <!-- FORM -->
-      <form method="POST" action="{{ route('admin.login') }}" class="space-y-4">
+     <!-- FORM -->
+      <form method="POST" action="{{ route('admin.login') }}" class="space-y-4" novalidate>
         @csrf
 
         <!-- Email -->
-        <input type="email" name="email" required
-          class="w-full px-3 py-2 border border-gray-300 rounded-lg 
-                 text-sm focus:outline-none focus:ring-2 focus:ring-[#00BFA5]"
-          placeholder="Email">
+        <div>
+          <input type="email" name="email" value="{{ old('email') }}"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg 
+                  text-sm focus:outline-none focus:ring-2 focus:ring-[#00BFA5]"
+            placeholder="Email">
+
+          @error('email')
+            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+          @enderror
+        </div>
 
         <!-- Password -->
-        <div class="relative">
-          <input type="password" 
-                name="password" 
-                id="password" 
-                required
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg 
-                       text-sm focus:outline-none focus:ring-2 focus:ring-[#FFD600]"
-                placeholder="Password">
+        <div class="mb-2">
+          <div class="relative">
+            <input type="password" 
+                  name="password" 
+                  id="password"
+                  class="w-full px-3 py-2 border rounded-lg text-sm
+                        focus:outline-none focus:ring-2 focus:ring-[#FFD600]
+                        @error('password') border-red-500 @else border-gray-300 @enderror"
+                  placeholder="Password">
 
-          <button type="button"
-                  id="togglePassword"
-                  class="absolute inset-y-0 right-3 flex items-center 
-                         text-gray-500 hover:text-gray-700 z-20">
-            <i id="eyeIcon" class="fa-solid fa-eye text-sm"></i>
-          </button>
+            <!-- TOGGLE -->
+            <button type="button"
+                    id="togglePassword"
+                    class="absolute inset-y-0 right-3 flex items-center 
+                          text-gray-500 hover:text-gray-700">
+              <i id="eyeIcon" class="fa-solid fa-eye text-sm"></i>
+            </button>
+          </div>  
+
+          <!-- ERROR (DI LUAR RELATIVE, STABIL) -->
+          <div class="min-h-[16px]">
+            @error('password')
+              <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+            @enderror
+          </div>
         </div>
 
         <!-- Button -->
         <button type="submit"
           class="w-full py-2 rounded-lg text-sm font-semibold text-gray-800
-                 bg-gradient-to-r from-[#00BFA5] to-[#FFD600]
-                 hover:from-[#009E8E] hover:to-[#FFC107]
-                 transition duration-300 shadow">
+                bg-gradient-to-r from-[#00BFA5] to-[#FFD600]
+                hover:from-[#009E8E] hover:to-[#FFC107]
+                transition duration-300 shadow">
           Masuk
         </button>
+
         <div class="text-right">
           <a href="{{ route('password.request') }}" 
             class="text-xs text-[#00ACC1] hover:underline">

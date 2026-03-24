@@ -13,20 +13,18 @@ class StockCheckController extends Controller
     public function index()
     {
         $produk = Produk::all();
-
         $today = Carbon::today();
 
         $checks = StockCheck::with('produk')
                     ->whereDate('tanggal', $today)
-                    ->orderBy('created_at', 'desc')
+                    ->latest()
                     ->get();
 
         // ===============================
         // CEK RIWAYAT MONITORING BERMASALAH
         // ===============================
-
         $totalProduk = $produk->count();
-        $hariKeBelakang = 30; // bisa ubah jadi 7 jika ingin lebih ringan
+        $hariKeBelakang = 30;
         $tanggalBermasalah = [];
 
         for ($i = 1; $i <= $hariKeBelakang; $i++) {
@@ -57,12 +55,19 @@ class StockCheckController extends Controller
 
     public function store(Request $request)
     {
+        // ✅ VALIDASI + PESAN INDONESIA
         $request->validate([
             'id_produk'  => 'required|exists:produk,id_produk',
             'stok_fisik' => 'required|integer|min:0'
+        ], [
+            'id_produk.required'  => 'Produk wajib dipilih',
+            'id_produk.exists'    => 'Produk tidak valid',
+            'stok_fisik.required' => 'Stok fisik wajib diisi',
+            'stok_fisik.integer'  => 'Stok harus berupa angka',
+            'stok_fisik.min'      => 'Stok tidak boleh kurang dari 0',
         ]);
 
-        $today = date('Y-m-d');
+        $today = Carbon::today();
 
         $exists = StockCheck::where('id_produk', $request->id_produk)
             ->whereDate('tanggal', $today)
@@ -70,7 +75,7 @@ class StockCheckController extends Controller
 
         if ($exists) {
             return back()
-                ->withErrors(['Produk sudah dimonitor hari ini.'])
+                ->withErrors(['id_produk' => 'Produk sudah dimonitor hari ini.'])
                 ->withInput();
         }
 
@@ -97,6 +102,8 @@ class StockCheckController extends Controller
         $request->validate([
             'tanggal_mulai'   => 'nullable|date',
             'tanggal_selesai' => 'nullable|date|after_or_equal:tanggal_mulai',
+        ], [
+            'tanggal_selesai.after_or_equal' => 'Tanggal selesai harus setelah atau sama dengan tanggal mulai',
         ]);
 
         $query = StockCheck::with('produk');
@@ -114,13 +121,8 @@ class StockCheckController extends Controller
 
         $checks = $query->orderBy('tanggal', 'desc')->get();
 
-        // kalau riwayat juga dipindah ke monitoring folder, sesuaikan
         return view('admin.riwayat_stok', compact('checks'));
     }
-
-    // =========================
-    // FITUR EDIT HARI YANG SAMA
-    // =========================
 
     public function edit($id)
     {
@@ -131,7 +133,6 @@ class StockCheckController extends Controller
                 ->with('error', 'Data hanya bisa diedit di hari yang sama.');
         }
 
-        // ✅ SESUAIKAN DENGAN FOLDER monitoring
         return view('monitoring.edit', compact('check'));
     }
 
@@ -144,15 +145,19 @@ class StockCheckController extends Controller
                 ->with('error', 'Data tidak bisa diedit karena bukan hari ini.');
         }
 
+        // ✅ VALIDASI INDONESIA
         $request->validate([
             'stok_fisik' => 'required|integer|min:0'
+        ], [
+            'stok_fisik.required' => 'Stok fisik wajib diisi',
+            'stok_fisik.integer'  => 'Stok harus berupa angka',
+            'stok_fisik.min'      => 'Stok tidak boleh kurang dari 0',
         ]);
 
         $check->stok_fisik = $request->stok_fisik;
         $check->selisih = $check->stok_sistem - $request->stok_fisik;
         $check->save();
 
-        // ❗ PERBAIKAN: tadi kamu redirect ke route yang salah
         return redirect()->route('admin.monitoring_stok')
             ->with('success', 'Data berhasil diperbarui.');
     }
