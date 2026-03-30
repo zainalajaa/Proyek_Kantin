@@ -9,7 +9,7 @@
         {{-- Header --}}
         <div class="px-6 py-4 border-b flex items-center justify-between">
             <h2 class="text-base md:text-lg font-semibold text-gray-800">
-                Tambah Produk
+                Form Tambah Produk
             </h2>
             <a href="{{ route('admin.produk.lihat') }}"
                class="text-gray-400 hover:text-gray-600 text-xl leading-none">

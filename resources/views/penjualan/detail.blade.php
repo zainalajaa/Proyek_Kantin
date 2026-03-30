@@ -25,12 +25,12 @@
 
         <div class="space-y-3">
             <div>
-                <p class="text-gray-500">No Transaksi</p>
+                <p class="text-gray-500">Nomor Transaksi</p>
                 <p class="font-medium">{{ $penjualan->id }}</p>
             </div>
 
             <div>
-                <p class="text-gray-500">Waktu</p>
+                <p class="text-gray-500">Waktu Transaksi</p>
                 <p class="font-medium">
                     {{ \Carbon\Carbon::parse($penjualan->waktu)->format('d M Y, H:i') }}
                 </p>
@@ -46,14 +46,7 @@
 
         <div class="space-y-3">
             <div>
-                <p class="text-gray-500">Total Harga</p>
-                <p class="font-semibold text-gray-800">
-                    Rp {{ number_format($penjualan->total_harga, 0, ',', '.') }}
-                </p>
-            </div>
-
-            <div>
-                <p class="text-gray-500">Dibayar</p>
+                <p class="text-gray-500">Jumlah Dibayar</p>
                 <p class="font-medium">
                     {{ $penjualan->paid_amount 
                         ? 'Rp ' . number_format($penjualan->paid_amount, 0, ',', '.') 
@@ -62,7 +55,7 @@
             </div>
 
             <div>
-                <p class="text-gray-500">Paid At</p>
+                <p class="text-gray-500">Waktu Pembayaran</p>
                 <p class="font-medium">
                     {{ $penjualan->paid_at 
                         ? \Carbon\Carbon::parse($penjualan->paid_at)->format('d M Y, H:i') 
@@ -71,7 +64,7 @@
             </div>
 
             <div>
-                <p class="text-gray-500">Status</p>
+                <p class="text-gray-500">Status Transaksi</p>
 
                 @if($penjualan->status === 'sukses')
                     <span class="inline-flex px-3 py-1 text-xs font-medium rounded-full bg-emerald-100 text-emerald-700">
@@ -80,7 +73,7 @@
 
                 @elseif($penjualan->status === 'pending_qris')
                     <span class="inline-flex px-3 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-700">
-                        QRIS Pending
+                        Menunggu Pembayaran QRIS
                     </span>
 
                 @else
@@ -96,16 +89,16 @@
     <!-- DETAIL PRODUK -->
     <div>
         <h2 class="text-lg font-semibold text-gray-800 mb-4">
-            Detail Produk
+            Daftar Produk
         </h2>
 
         <div class="overflow-x-auto">
             <table class="min-w-full border-separate border-spacing-y-2 text-sm">
                 <thead>
                     <tr class="text-xs uppercase tracking-wider text-gray-500">
-                        <th class="px-4 py-3 text-left">Produk</th>
-                        <th class="px-4 py-3 text-right">Harga</th>
-                        <th class="px-4 py-3 text-center">Qty</th>
+                        <th class="px-4 py-3 text-left">Nama Produk</th>
+                        <th class="px-4 py-3 text-right">Harga Satuan</th>
+                        <th class="px-4 py-3 text-center">Jumlah</th>
                         <th class="px-4 py-3 text-right">Subtotal</th>
                     </tr>
                 </thead>
@@ -133,6 +126,17 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- TOTAL DI PINDAH KE SINI -->
+        <div class="mt-6 flex justify-end">
+            <div class="bg-gray-50 px-6 py-4 rounded-lg shadow-sm text-right">
+                <p class="text-sm text-gray-500">Total Pembayaran</p>
+                <p class="text-xl font-bold text-gray-800">
+                    Rp {{ number_format($penjualan->total_harga, 0, ',', '.') }}
+                </p>
+            </div>
+        </div>
+
     </div>
 
 </div>

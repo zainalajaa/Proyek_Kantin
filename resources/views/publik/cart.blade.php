@@ -21,7 +21,7 @@
 
             <div class="bg-white rounded-3xl shadow-sm p-10 text-center">
                 <p class="text-slate-500 text-sm">
-                    Keranjang masih kosong.
+                    Keranjang masih kosong
                 </p>
             </div>
 
@@ -37,7 +37,8 @@
                 @foreach($cartItems as $key => $item)
                 <div class="cart-row border border-slate-100 rounded-2xl p-5 transition hover:shadow-sm"
                      data-key="{{ $key }}"
-                     data-harga="{{ (int) $item['harga_satuan'] }}">
+                     data-harga="{{ (int) $item['harga_satuan'] }}"
+                     data-stok="{{ $item['stok'] }}">
 
                     <div class="flex justify-between items-start">
 
@@ -68,21 +69,28 @@
                         <div class="inline-flex items-center border border-slate-200 rounded-xl overflow-hidden">
 
                             <button type="button"
-                                    class="btn-minus px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-sm">
+                                class="btn-minus px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-sm">
                                 −
                             </button>
 
                             <input type="number"
-                                   name="items[{{ $key }}][jumlah]"
-                                   value="{{ $item['jumlah'] }}"
-                                   min="1"
-                                   class="qty-input w-12 text-center text-sm outline-none">
+                                name="items[{{ $key }}][jumlah]"
+                                value="{{ $item['jumlah'] }}"
+                                min="1"
+                                max="{{ $item['stok'] }}"
+                                readonly
+                                class="qty-input w-12 text-center text-sm outline-none bg-white cursor-default">
 
                             <button type="button"
-                                    class="btn-plus px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-sm">
+                                class="btn-plus px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-sm">
                                 +
                             </button>
                         </div>
+
+                        <!-- 🔥 PINDAH KE SINI -->
+                        <p class="stok-warning text-red-600 text-xs mt-2 hidden font-medium">
+                            Jumlah melebihi stok tersedia
+                        </p>
 
                         <div class="subtotal-cell text-emerald-600 font-bold whitespace-nowrap">
                             Rp {{ number_format($item['subtotal'], 0, ',', '.') }}
@@ -116,7 +124,8 @@
                     @foreach($cartItems as $key => $item)
                     <tr class="cart-row hover:bg-slate-50 transition"
                         data-key="{{ $key }}"
-                        data-harga="{{ (int) $item['harga_satuan'] }}">
+                        data-harga="{{ (int) $item['harga_satuan'] }}"
+                        data-stok="{{ $item['stok'] }}">
 
                         <td class="py-5 text-slate-800">
                             <label class="flex items-center gap-3">
@@ -132,24 +141,31 @@
                         </td>
 
                         <td class="py-5 text-center">
-                            <div class="inline-flex items-center border border-slate-200 rounded-xl overflow-hidden">
-                                <button type="button"
-                                        class="btn-minus px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-sm">
-                                    −
-                                </button>
+                        <div class="inline-flex items-center border border-slate-200 rounded-xl overflow-hidden">
 
-                                <input type="number"
-                                       name="items[{{ $key }}][jumlah]"
-                                       value="{{ $item['jumlah'] }}"
-                                       min="1"
-                                       class="qty-input w-12 text-center text-sm outline-none">
+                            <button type="button"
+                                class="btn-minus px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-sm">
+                                −
+                            </button>
 
-                                <button type="button"
-                                        class="btn-plus px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-sm">
-                                    +
-                                </button>
-                            </div>
-                        </td>
+                            <input type="number"
+                                name="items[{{ $key }}][jumlah]"
+                                value="{{ $item['jumlah'] }}"
+                                min="1"
+                                max="{{ $item['stok'] }}"
+                                readonly
+                                class="qty-input w-12 text-center text-sm outline-none bg-white cursor-default">
+
+                            <button type="button"
+                                class="btn-plus px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-sm">
+                                +
+                            </button>
+                        </div>
+
+                        <!-- 🔥 PINDAH KE SINI -->
+                        <p class="stok-warning text-red-600 text-xs mt-2 hidden font-medium">
+                            Jumlah melebihi stok tersedia
+                        </p>
 
                         <td class="subtotal-cell py-5 text-right font-semibold text-emerald-600 whitespace-nowrap">
                             Rp {{ number_format($item['subtotal'], 0, ',', '.') }}
@@ -181,6 +197,10 @@
                         <input type="hidden" name="total_checkout" id="totalCheckout" value="0">
                     </div>
 
+                    <p id="checkout-warning" class="text-red-500 text-sm mb-3 hidden">
+                        Pilih minimal satu produk untuk dibayar.
+                    </p>
+                    
                     <button type="submit"
                             class="bg-emerald-500 text-white px-10 py-3 rounded-2xl font-semibold hover:bg-emerald-600 transition shadow-sm">
                         Lanjutkan Pembayaran
@@ -200,6 +220,20 @@
 
 @endsection
 
+@push('styles')
+<style>
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type=number] {
+    -moz-appearance: textfield;
+}
+</style>
+@endpush
+
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -207,10 +241,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const cartForm      = document.getElementById('cartForm');
     const selectedTotal = document.getElementById('selectedTotal');
     const totalCheckout = document.getElementById('totalCheckout');
+    const checkoutWarning = document.getElementById('checkout-warning');
 
     if (!cartForm) return;
 
-        function syncActiveInputs() {
+    // ===============================
+    // RESPONSIVE INPUT SYNC
+    // ===============================
+    function syncActiveInputs() {
         const isMobile = window.innerWidth < 768;
 
         document.querySelectorAll('.md\\:hidden input').forEach(input => {
@@ -229,26 +267,42 @@ document.addEventListener('DOMContentLoaded', () => {
     syncActiveInputs();
     window.addEventListener('resize', syncActiveInputs);
 
-
+    // ===============================
+    // FORMAT RUPIAH
+    // ===============================
     const formatRupiah = n =>
         'Rp ' + (n || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 
+    // ===============================
+    // HITUNG TOTAL
+    // ===============================
     function hitungTotalTerpilih() {
         let total = 0;
 
         document.querySelectorAll('.cart-row').forEach(row => {
 
-            const check = row.querySelector('.item-check');
-            const harga = parseInt(row.dataset.harga || '0', 10);
+            const check    = row.querySelector('.item-check');
+            const harga    = parseInt(row.dataset.harga || '0', 10);
+            const stok     = parseInt(row.dataset.stok || '0', 10);
             const qtyInput = row.querySelector('.qty-input');
 
             if (!qtyInput) return;
 
             let qty = parseInt(qtyInput.value || '0', 10);
+
             if (isNaN(qty) || qty < 1) {
                 qty = 1;
-                qtyInput.value = 1;
             }
+
+            // validasi stok
+            if (qty > stok) {
+                qty = stok;
+                if (warning) warning.classList.remove('hidden');
+            } else {
+                if (warning) warning.classList.add('hidden');
+            }
+
+            qtyInput.value = qty;
 
             const subtotal = harga * qty;
 
@@ -260,6 +314,16 @@ document.addEventListener('DOMContentLoaded', () => {
             if (check && check.checked) {
                 total += subtotal;
             }
+
+            // disable tombol +
+            const btnPlus = row.querySelector('.btn-plus');
+            if (btnPlus) {
+                if (qty >= stok) {
+                    btnPlus.classList.add('opacity-50'); // hanya visual
+                } else {
+                    btnPlus.classList.remove('opacity-50');
+                }
+            }
         });
 
         selectedTotal.textContent = formatRupiah(total);
@@ -267,7 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ===============================
-    // EVENT DELEGATION (LEBIH STABIL)
+    // CLICK EVENTS
     // ===============================
     cartForm.addEventListener('click', function(e) {
 
@@ -275,21 +339,52 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!row) return;
 
         const qtyInput = row.querySelector('.qty-input');
+        const warning  = row.querySelector('.stok-warning');
         if (!qtyInput) return;
 
-        // tombol +
+        // ➕ tombol tambah
         if (e.target.classList.contains('btn-plus')) {
-            qtyInput.value = (parseInt(qtyInput.value || '0', 10) || 0) + 1;
-            hitungTotalTerpilih();
+
+            let current = parseInt(qtyInput.value || '0', 10) || 0;
+            const stok = parseInt(row.dataset.stok || '0', 10);
+            const warning = row.querySelector('.stok-warning');
+
+            let next = current + 1;
+
+            if (next > stok) {
+                next = stok;
+
+                if (warning) {
+                    warning.classList.remove('hidden');
+                }
+            } else {
+                if (warning) {
+                    warning.classList.add('hidden');
+                }
+            }
+
+            qtyInput.value = next;
+
+            hitungTotalTerpilih(); // 🔥 WAJIB JALAN
         }
 
-        // tombol -
+        // ➖ tombol kurang
         if (e.target.classList.contains('btn-minus')) {
-            qtyInput.value = Math.max(1, (parseInt(qtyInput.value || '1', 10) || 1) - 1);
+
+            let current = parseInt(qtyInput.value || '0', 10) || 0;
+
+            let next = current - 1;
+            if (next < 1) next = 1;
+
+            qtyInput.value = next;
+
+            if (warning) warning.classList.add('hidden');
+
             hitungTotalTerpilih();
+
         }
 
-        // tombol hapus
+        // ❌ hapus item
         if (e.target.classList.contains('btn-remove')) {
 
             const key = row.dataset.key;
@@ -314,26 +409,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // edit manual qty
-    cartForm.addEventListener('input', function(e) {
-
-        if (!e.target.classList.contains('qty-input')) return;
-
-        if (!e.target.value || parseInt(e.target.value) < 1) {
-            e.target.value = 1;
-        }
-
-        hitungTotalTerpilih();
-    });
-
-    // ceklis item
+    // ===============================
+    // CHECKBOX
+    // ===============================
     cartForm.addEventListener('change', function(e) {
+
         if (e.target.classList.contains('item-check')) {
             hitungTotalTerpilih();
+
+            // hilangkan pesan submit jika user mulai pilih
+            if (checkoutWarning) {
+                checkoutWarning.classList.add('hidden');
+            }
         }
     });
 
-    // validasi submit
+    // ===============================
+    // VALIDASI SUBMIT (NO ALERT)
+    // ===============================
     cartForm.addEventListener('submit', function(e) {
 
         const checkedItems = Array.from(
@@ -342,14 +435,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (checkedItems.length === 0) {
             e.preventDefault();
-            alert('Pilih minimal satu produk untuk dibayar.');
+
+            if (checkoutWarning) {
+                checkoutWarning.classList.remove('hidden');
+            }
+
             return false;
         }
     });
 
-
-
-    // hitung awal
+    // INIT
     hitungTotalTerpilih();
 
 });

@@ -93,7 +93,7 @@
                transition-all duration-200 hover:bg-emerald-700
                {{ request()->routeIs('admin.monitoring_stok.riwayat') ? 'bg-emerald-700 shadow-inner' : '' }}">
                 <i data-lucide="history" class="w-5 h-5"></i>
-                <span>Riwayat</span>
+                <span>Riwayat Monitoring Stok</span>
             </a>
 
         </nav>

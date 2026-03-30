@@ -58,6 +58,7 @@ input[type=number] {
             @foreach($details as $d)
             <tr data-row="detail"
                 data-harga="{{ (int) $d->harga_satuan }}"
+                data-stok="{{ $d->produk->stok }}"
                 class="hover:bg-slate-50 transition">
 
                 <td class="py-4 font-medium text-slate-700">
@@ -79,15 +80,20 @@ input[type=number] {
 
                         <input type="number"
                             name="items[{{ $d->id }}][jumlah]"
-                            class="qty-input w-12 text-center outline-none text-sm"
+                            class="qty-input w-12 text-center outline-none text-sm bg-white cursor-default"
                             min="1"
-                            value="{{ $d->jumlah }}">
+                            value="{{ $d->jumlah }}"
+                            readonly>
 
                         <button type="button"
                             class="btn-plus px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-sm">
                             +
                         </button>
                     </div>
+                    
+                    <p class="stok-warning text-red-500 text-xs mt-1 hidden">
+                        Jumlah melebihi stok tersedia
+                    </p>
 
                     <input type="hidden" name="items[{{ $d->id }}][id_detail]" value="{{ $d->id }}">
                     <input type="hidden" name="items[{{ $d->id }}][id_produk]" value="{{ $d->id_produk }}">
@@ -220,29 +226,50 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let currentTotal = parseInt(totalHidden.value) || 0;
 
+    // ===============================
+    // FORMAT RUPIAH
+    // ===============================
     function format(n) {
-        return 'Rp ' + n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        return 'Rp ' + (n || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
     }
 
+    // ===============================
+    // HITUNG TOTAL
+    // ===============================
     function hitungUlangTotal() {
         let total = 0;
 
         document.querySelectorAll('tr[data-row="detail"]').forEach(tr => {
 
-            const harga = parseInt(tr.dataset.harga);
+            const harga = parseInt(tr.dataset.harga || 0);
+            const stok  = parseInt(tr.dataset.stok || 0);
             const qtyInput = tr.querySelector('.qty-input');
+            const warning  = tr.querySelector('.stok-warning');
+
+            if (!qtyInput) return;
 
             let qty = parseInt(qtyInput.value || 0);
 
-            if (qty < 1) {
-                qty = 1;
-                qtyInput.value = 1;
+            if (isNaN(qty) || qty < 1) qty = 1;
+
+            // 🔥 VALIDASI STOK
+            if (qty > stok) {
+                qty = stok;
+
+                if (warning) {
+                    warning.classList.remove('hidden');
+                }
             }
+
+            qtyInput.value = qty;
 
             const subtotal = harga * qty;
             total += subtotal;
 
-            tr.querySelector('.subtotal-cell').textContent = format(subtotal);
+            const subtotalCell = tr.querySelector('.subtotal-cell');
+            if (subtotalCell) {
+                subtotalCell.textContent = format(subtotal);
+            }
         });
 
         currentTotal = total;
@@ -253,14 +280,19 @@ document.addEventListener('DOMContentLoaded', () => {
         updateKembali();
     }
 
+    // ===============================
+    // HITUNG KEMBALIAN
+    // ===============================
     function updateKembali() {
         const bayar = parseInt(inputBayar.value || 0);
         const kembali = bayar - currentTotal;
 
-        kembaliText.textContent =
-            kembali > 0 ? format(kembali) : 'Rp 0';
+        kembaliText.textContent = kembali > 0 ? format(kembali) : 'Rp 0';
     }
 
+    // ===============================
+    // TOGGLE METODE
+    // ===============================
     function toggleMetode() {
 
         const metode = document.querySelector('input[name="metode_pembayaran"]:checked').value;
@@ -286,29 +318,78 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    document.querySelectorAll('.btn-plus').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const qty = btn.closest('tr').querySelector('.qty-input');
-            qty.value = parseInt(qty.value) + 1;
-            hitungUlangTotal();
-        });
-    });
+    // ===============================
+    // TOMBOL TAMBAH
+    // ===============================
+document.querySelectorAll('.btn-plus').forEach(btn => {
+    btn.addEventListener('click', () => {
 
+        const tr = btn.closest('tr');
+        const qtyInput = tr.querySelector('.qty-input');
+        const warning  = tr.querySelector('.stok-warning');
+        const stok     = parseInt(tr.dataset.stok || 0);
+
+        let qty = parseInt(qtyInput.value || 0) || 0;
+
+        // 🔥 kalau sudah di batas
+        if (qty >= stok) {
+
+            qtyInput.value = stok;
+
+            if (warning) {
+                warning.classList.remove('hidden');
+            }
+
+        } else {
+
+            let next = qty + 1;
+            qtyInput.value = next;
+
+            if (warning) {
+                warning.classList.add('hidden');
+            }
+        }
+
+        hitungUlangTotal();
+    });
+});
+
+    // ===============================
+    // TOMBOL KURANG
+    // ===============================
     document.querySelectorAll('.btn-minus').forEach(btn => {
         btn.addEventListener('click', () => {
-            const qty = btn.closest('tr').querySelector('.qty-input');
-            if (parseInt(qty.value) > 1) qty.value--;
+
+            const tr = btn.closest('tr');
+            const qtyInput = tr.querySelector('.qty-input');
+            const warning  = tr.querySelector('.stok-warning');
+            const stok     = parseInt(tr.dataset.stok || 0);
+
+            let qty = parseInt(qtyInput.value || 0) || 0;
+
+            let next = qty - 1;
+            if (next < 1) next = 1;
+
+            qtyInput.value = next;
+
+            // 🔥 HILANGKAN WARNING SAAT VALID
+            if (next < stok && warning) {
+                warning.classList.add('hidden');
+            }
+
             hitungUlangTotal();
         });
     });
 
-    document.querySelectorAll('.qty-input').forEach(i =>
-        i.addEventListener('input', hitungUlangTotal)
-    );
-
+    // ===============================
+    // CHANGE METODE
+    // ===============================
     document.querySelectorAll('input[name="metode_pembayaran"]')
         .forEach(r => r.addEventListener('change', toggleMetode));
 
+    // ===============================
+    // INPUT BAYAR
+    // ===============================
     inputBayar.addEventListener('input', () => {
 
         updateKembali();
@@ -316,13 +397,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const bayar = parseInt(inputBayar.value || 0);
 
         if (bayar >= currentTotal) {
-
             errorTunai.classList.add('hidden');
             inputBayar.classList.remove('border-red-500');
-
         }
     });
 
+    // ===============================
+    // VALIDASI SUBMIT
+    // ===============================
     formTunai.addEventListener('submit', function(e) {
 
         const action = document.activeElement.value;
@@ -342,12 +424,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 errorTunai.classList.remove('hidden');
                 inputBayar.classList.add('border-red-500');
-
             }
         }
     });
 
+    // INIT
     toggleMetode();
+    hitungUlangTotal();
+
 });
 </script>
 @endpush

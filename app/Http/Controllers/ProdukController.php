@@ -36,22 +36,23 @@ class ProdukController extends Controller
      */
     public function store(Request $request)
     {
-        // dd($request->kategori_id);
-    
         $data = $request->validate([
             'nama_produk'   => 'required|string|max:255',
             'kategori_id'   => 'required|exists:kategori,id',
             'stok'          => 'required|integer|min:0',
             'harga'         => 'required|integer|min:0',
-            'gambar_produk' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'gambar_produk' => 'required|image|mimes:jpg,jpeg,png|max:2048',
+        ], [
+            'gambar_produk.required' => 'Gambar produk wajib diupload.',
+            'gambar_produk.image'    => 'File harus berupa gambar.',
+            'gambar_produk.mimes'    => 'Format gambar harus JPG, JPEG, atau PNG.',
+            'gambar_produk.max'      => 'Ukuran gambar maksimal 2MB.',
         ]);
 
-        // Upload gambar jika ada
-        if ($request->hasFile('gambar_produk')) {
-            $data['gambar_produk'] = $request
-                ->file('gambar_produk')
-                ->store('produk', 'public');
-        }
+        // Simpan gambar
+        $data['gambar_produk'] = $request
+            ->file('gambar_produk')
+            ->store('produk', 'public');
 
         Produk::create($data);
 
@@ -127,6 +128,7 @@ class ProdukController extends Controller
     public function publicPage()
     {
         $produks = Produk::with('kategori')
+            ->where('stok', '>', 0) // 🔥 penting
             ->orderBy('nama_produk')
             ->paginate(12);
 
