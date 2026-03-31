@@ -285,14 +285,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const harga    = parseInt(row.dataset.harga || '0', 10);
             const stok     = parseInt(row.dataset.stok || '0', 10);
             const qtyInput = row.querySelector('.qty-input');
+            const warning  = row.querySelector('.stok-warning'); // ✅ FIX
 
             if (!qtyInput) return;
 
-            let qty = parseInt(qtyInput.value || '0', 10);
+            let qty = parseInt(qtyInput.value, 10) || 1;
 
-            if (isNaN(qty) || qty < 1) {
-                qty = 1;
-            }
+            // validasi minimal
+            if (qty < 1) qty = 1;
 
             // validasi stok
             if (qty > stok) {
@@ -318,11 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // disable tombol +
             const btnPlus = row.querySelector('.btn-plus');
             if (btnPlus) {
-                if (qty >= stok) {
-                    btnPlus.classList.add('opacity-50'); // hanya visual
-                } else {
-                    btnPlus.classList.remove('opacity-50');
-                }
+                btnPlus.classList.toggle('opacity-50', qty >= stok);
             }
         });
 
@@ -345,27 +341,18 @@ document.addEventListener('DOMContentLoaded', () => {
         // ➕ tombol tambah
         if (e.target.classList.contains('btn-plus')) {
 
-            let current = parseInt(qtyInput.value || '0', 10) || 0;
+            let current = parseInt(qtyInput.value, 10) || 1;
             const stok = parseInt(row.dataset.stok || '0', 10);
             const warning = row.querySelector('.stok-warning');
 
-            let next = current + 1;
-
-            if (next > stok) {
-                next = stok;
-
-                if (warning) {
-                    warning.classList.remove('hidden');
-                }
+            if (current < stok) {
+                qtyInput.value = current + 1;
+                if (warning) warning.classList.add('hidden');
             } else {
-                if (warning) {
-                    warning.classList.add('hidden');
-                }
+                if (warning) warning.classList.remove('hidden');
             }
 
-            qtyInput.value = next;
-
-            hitungTotalTerpilih(); // 🔥 WAJIB JALAN
+            hitungTotalTerpilih();
         }
 
         // ➖ tombol kurang
