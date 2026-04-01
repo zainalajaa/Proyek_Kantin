@@ -124,6 +124,7 @@ class CheckoutController extends Controller
                 'harga_satuan' => $item['harga_satuan'],
                 'jumlah'       => $qty,
                 'subtotal'     => $item['harga_satuan'] * $qty,
+                'stok'         => $produk->stok, // 🔥 WAJIB
             ];
 
             if ($isChecked) {
@@ -163,10 +164,6 @@ class CheckoutController extends Controller
                 if ($produk->stok < $item['jumlah']) {
                     throw new \Exception('Stok berubah, silakan ulangi transaksi.');
                 }
-
-                // kurangi stok
-                $produk->stok -= $item['jumlah'];
-                $produk->save();
 
                 PenjualanDetail::create([
                     'id_penjualan' => $penjualan->id,

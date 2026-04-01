@@ -38,7 +38,7 @@
                 <div class="cart-row border border-slate-100 rounded-2xl p-5 transition hover:shadow-sm"
                      data-key="{{ $key }}"
                      data-harga="{{ (int) $item['harga_satuan'] }}"
-                     data-stok="{{ $item['stok'] }}">
+                     data-stok="{{ (int) ($item['stok'] ?? 1) }}">
 
                     <div class="flex justify-between items-start">
 
@@ -77,7 +77,7 @@
                                 name="items[{{ $key }}][jumlah]"
                                 value="{{ $item['jumlah'] }}"
                                 min="1"
-                                max="{{ $item['stok'] }}"
+                                max="{{ $item['stok'] ?? 1 }}"
                                 readonly
                                 class="qty-input w-12 text-center text-sm outline-none bg-white cursor-default">
 
@@ -87,15 +87,14 @@
                             </button>
                         </div>
 
-                        <!-- 🔥 PINDAH KE SINI -->
-                        <p class="stok-warning text-red-600 text-xs mt-2 hidden font-medium">
-                            Jumlah melebihi stok tersedia
-                        </p>
-
                         <div class="subtotal-cell text-emerald-600 font-bold whitespace-nowrap">
                             Rp {{ number_format($item['subtotal'], 0, ',', '.') }}
                         </div>
                     </div>
+
+                    <p class="stok-warning text-red-600 text-xs mt-2 hidden font-medium">
+                        Jumlah melebihi stok tersedia
+                    </p>
 
                     <input type="hidden" name="items[{{ $key }}][id_produk]" value="{{ $item['id_produk'] }}">
                     <input type="hidden" name="items[{{ $key }}][harga]" value="{{ (int) $item['harga_satuan'] }}">
@@ -125,7 +124,7 @@
                     <tr class="cart-row hover:bg-slate-50 transition"
                         data-key="{{ $key }}"
                         data-harga="{{ (int) $item['harga_satuan'] }}"
-                        data-stok="{{ $item['stok'] }}">
+                        data-stok="{{ (int) ($item['stok'] ?? 1) }}">
 
                         <td class="py-5 text-slate-800">
                             <label class="flex items-center gap-3">
@@ -152,7 +151,7 @@
                                 name="items[{{ $key }}][jumlah]"
                                 value="{{ $item['jumlah'] }}"
                                 min="1"
-                                max="{{ $item['stok'] }}"
+                                max="{{ $item['stok'] ?? 1 }}"
                                 readonly
                                 class="qty-input w-12 text-center text-sm outline-none bg-white cursor-default">
 
@@ -238,204 +237,273 @@ input[type=number] {
 <script>
 document.addEventListener('DOMContentLoaded', () => {
 
-    const cartForm      = document.getElementById('cartForm');
-    const selectedTotal = document.getElementById('selectedTotal');
-    const totalCheckout = document.getElementById('totalCheckout');
-    const checkoutWarning = document.getElementById('checkout-warning');
+    const formTunai   = document.getElementById('cartForm');
+    const totalHidden = document.getElementById('totalCheckout');
+    const inputBayar  = document.getElementById('jumlah_bayar');
+    const kembaliText = document.getElementById('kembaliText');
+    const qrisBox     = document.getElementById('qrisBox');
+    const tunaiBox    = document.getElementById('tunaiBox');
+    const btnBayar    = document.getElementById('btnBayar');
+    const errorTunai  = document.getElementById('errorTunai');
 
-    if (!cartForm) return;
-
-    // ===============================
-    // RESPONSIVE INPUT SYNC
-    // ===============================
-    function syncActiveInputs() {
-        const isMobile = window.innerWidth < 768;
-
-        document.querySelectorAll('.md\\:hidden input').forEach(input => {
-            if (!input.classList.contains('item-check')) {
-                input.disabled = !isMobile;
-            }
-        });
-
-        document.querySelectorAll('.desktop-view input').forEach(input => {
-            if (!input.classList.contains('item-check')) {
-                input.disabled = isMobile;
-            }
-        });
-    }
-
-    syncActiveInputs();
-    window.addEventListener('resize', syncActiveInputs);
+    let currentTotal = parseInt(totalHidden.value) || 0;
 
     // ===============================
-    // FORMAT RUPIAH
+    // FORMAT
     // ===============================
-    const formatRupiah = n =>
+    const format = n =>
         'Rp ' + (n || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 
     // ===============================
-    // HITUNG TOTAL
+    // HITUNG TOTAL (SAMA CART)
     // ===============================
-    function hitungTotalTerpilih() {
+    function hitungUlangTotal() {
+
         let total = 0;
 
-        document.querySelectorAll('.cart-row').forEach(row => {
+        document.querySelectorAll('.cart-row:not([style*="display: none"])').forEach(tr => {
 
-            const check    = row.querySelector('.item-check');
-            const harga    = parseInt(row.dataset.harga || '0', 10);
-            const stok     = parseInt(row.dataset.stok || '0', 10);
-            const qtyInput = row.querySelector('.qty-input');
-            const warning  = row.querySelector('.stok-warning'); // ✅ FIX
+            const harga = parseInt(tr.dataset.harga) || 0;
+
+            let stok = parseInt(tr.dataset.stok);
+            if (isNaN(stok) || stok < 1) stok = 1;
+
+            const qtyInput = tr.querySelector('.qty-input');
+            const warning  = tr.querySelector('.stok-warning');
 
             if (!qtyInput) return;
 
-            let qty = parseInt(qtyInput.value, 10) || 1;
+            let qty = parseInt(qtyInput.value);
+            if (isNaN(qty) || qty < 1) qty = 1;
 
-            // validasi minimal
-            if (qty < 1) qty = 1;
+            let originalQty = qty;
 
-            // validasi stok
-            if (qty > stok) {
+            if (originalQty > stok) {
+                warning?.classList.remove('hidden');
                 qty = stok;
-                if (warning) warning.classList.remove('hidden');
             } else {
-                if (warning) warning.classList.add('hidden');
+                warning?.classList.add('hidden');
             }
 
             qtyInput.value = qty;
 
             const subtotal = harga * qty;
 
-            const subtotalCell = row.querySelector('.subtotal-cell');
-            if (subtotalCell) {
-                subtotalCell.textContent = formatRupiah(subtotal);
-            }
-
-            if (check && check.checked) {
+            // 🔥 FIX TOTAL BERDASARKAN CHECKBOX
+            const checkbox = tr.querySelector('.item-check');
+            if (checkbox && checkbox.checked) {
                 total += subtotal;
             }
 
-            // disable tombol +
-            const btnPlus = row.querySelector('.btn-plus');
-            if (btnPlus) {
-                btnPlus.classList.toggle('opacity-50', qty >= stok);
+            const subtotalCell = tr.querySelector('.subtotal-cell');
+            if (subtotalCell) {
+                subtotalCell.textContent = format(subtotal);
             }
+
         });
 
-        selectedTotal.textContent = formatRupiah(total);
-        totalCheckout.value = total;
+        currentTotal = total;
+
+        document.getElementById('selectedTotal').textContent = format(total);
+        totalHidden.value = total;
+
+        updateKembali();
     }
 
     // ===============================
-    // CLICK EVENTS
+    // KEMBALIAN
     // ===============================
-    cartForm.addEventListener('click', function(e) {
+    function updateKembali() {
 
-        const row = e.target.closest('.cart-row');
-        if (!row) return;
+        // 🔥 CEK DULU
+        if (!inputBayar || !kembaliText) return;
 
-        const qtyInput = row.querySelector('.qty-input');
-        const warning  = row.querySelector('.stok-warning');
-        if (!qtyInput) return;
+        const bayar = parseInt(inputBayar.value) || 0;
+        const kembali = bayar - currentTotal;
 
-        // ➕ tombol tambah
-        if (e.target.classList.contains('btn-plus')) {
-
-            let current = parseInt(qtyInput.value, 10) || 1;
-            const stok = parseInt(row.dataset.stok || '0', 10);
-            const warning = row.querySelector('.stok-warning');
-
-            if (current < stok) {
-                qtyInput.value = current + 1;
-                if (warning) warning.classList.add('hidden');
-            } else {
-                if (warning) warning.classList.remove('hidden');
-            }
-
-            hitungTotalTerpilih();
-        }
-
-        // ➖ tombol kurang
-        if (e.target.classList.contains('btn-minus')) {
-
-            let current = parseInt(qtyInput.value || '0', 10) || 0;
-
-            let next = current - 1;
-            if (next < 1) next = 1;
-
-            qtyInput.value = next;
-
-            if (warning) warning.classList.add('hidden');
-
-            hitungTotalTerpilih();
-
-        }
-
-        // ❌ hapus item
-        if (e.target.classList.contains('btn-remove')) {
-
-            const key = row.dataset.key;
-
-            fetch("{{ route('cart.remove') }}", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document
-                        .querySelector('meta[name="csrf-token"]').content
-                },
-                body: JSON.stringify({ key })
-            })
-            .then(res => res.json())
-            .then(res => {
-                if (res.success) {
-                    row.remove();
-                    hitungTotalTerpilih();
-                    showToast('Produk dihapus dari keranjang');
-                }
-            });
-        }
-    });
+        kembaliText.textContent = kembali > 0 ? format(kembali) : 'Rp 0';
+    }
 
     // ===============================
+    // TOGGLE METODE
+    // ===============================
+    function toggleMetode() {
+
+        const metode = document.querySelector('input[name="metode_pembayaran"]:checked').value;
+
+        if (metode === 'qris') {
+
+            qrisBox.classList.remove('hidden');
+            tunaiBox.classList.add('hidden');
+
+            inputBayar.value = '';
+            inputBayar.disabled = true;
+
+            btnBayar.textContent = 'Lanjutkan Pembayaran QRIS';
+
+        } else {
+
+            qrisBox.classList.add('hidden');
+            tunaiBox.classList.remove('hidden');
+
+            inputBayar.disabled = false;
+
+            btnBayar.textContent = 'Bayar';
+        }
+    }
+
+    // ===============================
+    // 🔥 EVENT DELEGATION (FIX UTAMA)
+    // ===============================
+formTunai.addEventListener('click', function(e) {
+
+    const target = e.target.closest('button, .item-check, .btn-plus, .btn-minus, .btn-remove');
+    if (!target) return;
+
     // CHECKBOX
-    // ===============================
-    cartForm.addEventListener('change', function(e) {
+    if (target.classList.contains('item-check')) {
+        hitungUlangTotal();
+        return;
+    }
 
-        if (e.target.classList.contains('item-check')) {
-            hitungTotalTerpilih();
+    const tr = target.closest('.cart-row');
+    if (!tr) return;
 
-            // hilangkan pesan submit jika user mulai pilih
-            if (checkoutWarning) {
-                checkoutWarning.classList.add('hidden');
+    const btnPlus   = target.closest('.btn-plus');
+    const btnMinus  = target.closest('.btn-minus');
+    const btnRemove = target.closest('.btn-remove');
+
+    // =====================
+    // HAPUS ITEM
+    // =====================
+    if (btnRemove) {
+
+        tr.style.display = 'none';
+
+        const rows = document.querySelectorAll('.cart-row:not([style*="display: none"])');
+
+        if (rows.length === 0) {
+            document.querySelector('table')?.style.setProperty('display', 'none');
+        }
+
+        hitungUlangTotal();
+        return;
+    }
+
+    if (!btnPlus && !btnMinus) return;
+
+    const qtyInput = tr.querySelector('.qty-input');
+
+    // 🔥 PERBAIKAN: selector warning dipastikan spesifik
+    const warning = tr.querySelector('.stok-warning');
+
+    let qty  = parseInt(qtyInput.value);
+    let stok = parseInt(tr.dataset.stok);
+
+    if (isNaN(stok) || stok < 1) stok = 1;
+    if (isNaN(qty) || qty < 1) qty = 1;
+
+    let showWarning = false;
+
+    // ➕ TAMBAH
+    if (btnPlus) {
+
+        if (qty < stok) {
+            qty++;
+        } else {
+            showWarning = true;
+        }
+    }
+
+    // ➖ KURANG
+    if (btnMinus) {
+        qty--;
+        if (qty < 1) qty = 1;
+    }
+
+    // VALIDASI FINAL
+    if (qty > stok) {
+        qty = stok;
+        showWarning = true;
+    }
+
+    qtyInput.value = qty;
+
+    // HITUNG TOTAL
+    hitungUlangTotal();
+
+    // 🔥 FORCE RENDER (khusus mobile)
+    requestAnimationFrame(() => {
+        if (warning) {
+            if (showWarning) {
+                warning.classList.remove('hidden');
+            } else {
+                warning.classList.add('hidden');
             }
         }
     });
 
+});
+        
+
     // ===============================
-    // VALIDASI SUBMIT (NO ALERT)
+    // LOCK INPUT
     // ===============================
-    cartForm.addEventListener('submit', function(e) {
-
-        const checkedItems = Array.from(
-            cartForm.querySelectorAll('.item-check')
-        ).filter(cb => cb.checked && !cb.disabled);
-
-        if (checkedItems.length === 0) {
-            e.preventDefault();
-
-            if (checkoutWarning) {
-                checkoutWarning.classList.remove('hidden');
-            }
-
-            return false;
-        }
+    document.querySelectorAll('.qty-input').forEach(input => {
+        input.addEventListener('keydown', e => e.preventDefault());
     });
+
+    // ===============================
+    // INPUT BAYAR
+    // ===============================
+    if (inputBayar) {
+        inputBayar.addEventListener('input', updateKembali);
+    }
+
+    // ===============================
+    // CHANGE METODE
+    // ===============================
+    const metodeInputs = document.querySelectorAll('input[name="metode_pembayaran"]');
+
+    if (metodeInputs.length) {
+        metodeInputs.forEach(r => r.addEventListener('change', toggleMetode));
+        toggleMetode();
+    }
+
+    // ===============================
+    // VALIDASI SUBMIT
+    // ===============================
+    if (formTunai) {
+        formTunai.addEventListener('submit', function(e) {
+
+            const metodeEl = document.querySelector('input[name="metode_pembayaran"]:checked');
+            const metode = metodeEl ? metodeEl.value : null;
+
+            const action = document.activeElement?.value;
+
+            if (action === 'pay' && metode === 'qris') return true;
+
+            if (action === 'pay') {
+
+                const bayar = parseInt(inputBayar?.value) || 0;
+
+                if (bayar < currentTotal) {
+
+                    e.preventDefault();
+
+                    if (errorTunai) errorTunai.classList.remove('hidden');
+                    if (inputBayar) inputBayar.classList.add('border-red-500');
+                }
+            }
+        });
+    }
 
     // INIT
-    hitungTotalTerpilih();
+    if (document.querySelector('input[name="metode_pembayaran"]')) {
+        toggleMetode();
+    }
+    hitungUlangTotal();
 
 });
 </script>
 @endpush
-
-

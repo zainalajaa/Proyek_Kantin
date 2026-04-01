@@ -81,7 +81,14 @@ class PenjualanPublikController extends Controller
                 ->with('error', 'Transaksi tidak valid untuk pembayaran.');
         }
 
-        $details = $penjualan->details()->get();
+        $details = $penjualan->details()
+            ->with('produk') // 
+            ->get();
+
+        // 🔥 inject stok ke setiap detail
+        foreach ($details as $d) {
+            $d->stok = $d->produk->stok ?? 0;
+        }
 
         return view('publik.tunai_detail', compact('penjualan', 'details'));
     }
@@ -310,7 +317,5 @@ class PenjualanPublikController extends Controller
             return back()->with('error', 'Pembelian produk melebihi stok yang tersedia, Periksa ketersedian stok dan lakukan pembayaran sesuai dengan jumlah produk yang tersedia.');
         }
     }
-
-
 
 }
