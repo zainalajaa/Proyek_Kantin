@@ -3,10 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Str;
-use App\Models\Admin;
 
 class ForgotPasswordController extends Controller
 {
@@ -18,35 +15,23 @@ class ForgotPasswordController extends Controller
     public function sendResetLinkEmail(Request $request)
     {
         $request->validate([
-            'email' => 'required|email'
+            'email' => 'required|email|exists:admins,email'
+        ], [
+            'email.exists' => 'Email tidak terdaftar sebagai admin.'
         ]);
 
-        $admin = Admin::where('email', $request->email)->first();
-
-        if (!$admin) {
-            return back()->withErrors([
-                'email' => 'Email yang dimasukkan salah.'
-            ]);
-        }
-
-        // buat token reset
-        $token = Str::random(64);
-
-        // simpan ke tabel password_reset_tokens
-        DB::table('password_reset_tokens')->updateOrInsert(
-            ['email' => $request->email],
-            [
-                'token' => bcrypt($token),
-                'created_at' => now()
-            ]
+        // kirim link reset ke email via Gmail SMTP
+        $status = Password::broker('admins')->sendResetLink(
+            $request->only('email')
         );
 
-        // buat link reset
-        $resetLink = url('/reset-password/'.$token.'?email='.$request->email);
+        // cek hasil
+        if ($status === Password::RESET_LINK_SENT) {
+            return back()->with('status', 'Link reset password sudah dikirim ke email.');
+        }
 
-        return back()->with([
-            'status' => 'Link reset password berhasil dibuat.',
-            'reset_link' => $resetLink
+        return back()->withErrors([
+            'email' => 'Gagal mengirim email reset password.'
         ]);
     }
 }
