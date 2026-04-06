@@ -44,94 +44,172 @@ input[type=number] {
     <form action="{{ route('publik.tunai.bayar', $penjualan->id) }}" method="POST" id="formTunai">
     @csrf
 
-    {{-- PRODUK --}}
+    {{-- ================= PRODUK ================= --}}
     <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 mb-6">
 
         <h3 class="font-semibold text-slate-700 mb-5">
             Daftar Produk
         </h3>
 
-        <div class="overflow-x-auto">
-        <table class="w-full text-sm border-separate border-spacing-y-2">
+        {{-- ================= MOBILE VIEW ================= --}}
+        <div class="md:hidden space-y-6">
+        @foreach($details as $d)
+        <div class="cart-row border border-slate-100 rounded-2xl p-5"
+            data-row="detail"
+            data-harga="{{ (int) $d->harga_satuan }}"
+            data-stok="{{ (int) ($d->stok ?? 0) }}">
 
-            {{-- HEADER --}}
-            <thead class="text-slate-500">
-                <tr>
-                    <th class="py-2 text-left">Produk</th>
-                    <th class="py-2 text-right">Harga</th>
-                    <th class="py-2 text-center">Jumlah</th>
-                    <th class="py-2 text-right">Subtotal</th>
-                </tr>
-            </thead>
+            <div class="flex justify-between items-start">
 
-            <tbody>
-            @foreach($details as $d)
-            <tr data-row="detail"
-                data-harga="{{ (int) $d->harga_satuan }}"
-                data-stok="{{ (int) ($d->stok ?? 0) }}"
-                class="bg-white rounded-xl shadow-sm hover:bg-slate-50 transition">
-
-                {{-- PRODUK --}}
-                <td class="py-4 px-3 font-medium text-slate-700 break-words">
-                    {{ $d->nama_produk }}
-                </td>
-
-                {{-- HARGA --}}
-                <td class="py-4 px-3 text-right text-slate-600">
-                    Rp {{ number_format($d->harga_satuan, 0, ',', '.') }}
-                </td>
-
-                {{-- QTY --}}
-                <td class="py-4 px-3 text-center align-top">
-
-                    <div class="inline-flex items-center rounded-full bg-slate-200 overflow-hidden">
-
-                        <!-- MINUS -->
-                        <button type="button"
-                            class="btn-minus w-11 h-9 flex items-center justify-center text-slate-600 hover:bg-slate-300 transition">
-                            −
-                        </button>
-
-                        <!-- QTY -->
-                        <div class="w-12 h-9 flex items-center justify-center bg-slate-100 text-sm font-medium text-slate-700">
-                            <input type="number"
-                                name="items[{{ $d->id }}][jumlah]"
-                                class="qty-input w-full text-center bg-transparent outline-none"
-                                value="{{ $d->jumlah }}"
-                                readonly>
-                        </div>
-
-                        <!-- PLUS -->
-                        <button type="button"
-                            class="btn-plus w-11 h-9 flex items-center justify-center text-slate-600 hover:bg-slate-300 transition">
-                            +
-                        </button>
-
+                <div>
+                    <div class="font-semibold text-slate-800">
+                        {{ $d->nama_produk }}
                     </div>
 
-                    <p class="stok-warning text-xs text-red-500 mt-2 hidden">
-                        Jumlah tidak bisa melebihi stok
-                    </p>
+                    <div class="text-sm text-slate-500 mt-1 space-y-1">
+                        <div>
+                            Rp {{ number_format($d->harga_satuan, 0, ',', '.') }}
+                        </div>
 
-                </td>
-                    {{-- HIDDEN INPUT --}}
+                        <div class="text-xs text-slate-400">
+                            Stok:
+                            @if(($d->stok ?? 0) <= 0)
+                                <span class="text-red-500 font-semibold">Habis</span>
+                            @else
+                                {{ $d->stok }}
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="flex justify-between items-center mt-5">
+
+                <div class="inline-flex items-center border border-slate-200 rounded-xl overflow-hidden">
+
+                    <button type="button"
+                        class="btn-minus px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-sm">
+                        −
+                    </button>
+
+                    <input type="number"
+                        name="items[{{ $d->id }}][jumlah]"
+                        value="{{ $d->jumlah }}"
+                        readonly
+                        class="qty-input w-12 text-center text-sm outline-none bg-white">
+
+                    <button type="button"
+                        class="btn-plus px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-sm">
+                        +
+                    </button>
+                </div>
+
+                <div class="subtotal-cell text-emerald-600 font-bold whitespace-nowrap">
+                    Rp {{ number_format($d->subtotal, 0, ',', '.') }}
+                </div>
+            </div>
+
+            <p class="stok-warning text-red-600 text-xs mt-2 hidden font-medium">
+                Melebihi stok
+            </p>
+
+            <!-- HIDDEN -->
+            <input type="hidden" name="items[{{ $d->id }}][id_detail]" value="{{ $d->id }}">
+            <input type="hidden" name="items[{{ $d->id }}][id_produk]" value="{{ $d->id_produk }}">
+            <input type="hidden" name="items[{{ $d->id }}][harga_satuan]" value="{{ $d->harga_satuan }}">
+
+        </div>
+        @endforeach
+        </div>
+
+        {{-- ================= DESKTOP VIEW ================= --}}
+        <div class="hidden md:block overflow-x-auto">
+
+            <table class="w-full text-sm">
+                <thead class="border-b text-slate-500">
+                    <tr>
+                        <th class="py-4 text-left">Produk</th>
+                        <th class="py-4 text-right">Harga</th>
+                        <th class="py-4 text-center">Stok</th>
+                        <th class="py-4 text-center">Jumlah</th>
+                        <th class="py-4 text-right">Subtotal</th>
+                    </tr>
+                </thead>
+
+                <tbody class="divide-y divide-slate-100">
+                @foreach($details as $d)
+                <tr class="cart-row hover:bg-slate-50 transition"
+                    data-row="detail"
+                    data-harga="{{ (int) $d->harga_satuan }}"
+                    data-stok="{{ (int) ($d->stok ?? 0) }}">
+
+                    <!-- PRODUK -->
+                    <td class="py-5 text-slate-800">
+                        {{ $d->nama_produk }}
+                    </td>
+
+                    <!-- HARGA -->
+                    <td class="py-5 text-right text-slate-600 whitespace-nowrap">
+                        Rp {{ number_format($d->harga_satuan, 0, ',', '.') }}
+                    </td>
+
+                    <!-- STOK -->
+                    <td class="py-5 text-center">
+                        @if(($d->stok ?? 0) <= 0)
+                            <span class="text-red-500 font-semibold text-xs">
+                                Habis
+                            </span>
+                        @else
+                            <span class="text-slate-600">
+                                {{ $d->stok }}
+                            </span>
+                        @endif
+                    </td>
+
+                    <!-- JUMLAH -->
+                    <td class="py-5 text-center">
+                        <div class="inline-flex items-center border border-slate-200 rounded-xl overflow-hidden">
+
+                            <button type="button"
+                                class="btn-minus px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-sm">
+                                −
+                            </button>
+
+                            <input type="number"
+                                name="items[{{ $d->id }}][jumlah]"
+                                value="{{ $d->jumlah }}"
+                                readonly
+                                class="qty-input w-12 text-center text-sm outline-none bg-white">
+
+                            <button type="button"
+                                class="btn-plus px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-sm">
+                                +
+                            </button>
+                        </div>
+
+                        <p class="stok-warning text-red-600 text-xs mt-2 hidden font-medium">
+                            Melebihi stok
+                        </p>
+                    </td>
+
+                    <!-- SUBTOTAL -->
+                    <td class="subtotal-cell py-5 text-right font-semibold text-emerald-600 whitespace-nowrap">
+                        Rp {{ number_format($d->subtotal, 0, ',', '.') }}
+                    </td>
+
+                    <!-- HIDDEN -->
                     <input type="hidden" name="items[{{ $d->id }}][id_detail]" value="{{ $d->id }}">
                     <input type="hidden" name="items[{{ $d->id }}][id_produk]" value="{{ $d->id_produk }}">
                     <input type="hidden" name="items[{{ $d->id }}][harga_satuan]" value="{{ $d->harga_satuan }}">
 
-                </td>
+                </tr>
+                @endforeach
+                </tbody>
+            </table>
 
-                {{-- SUBTOTAL --}}
-                <td class="py-4 px-3 text-right font-semibold text-emerald-600 subtotal-cell">
-                    Rp {{ number_format($d->subtotal, 0, ',', '.') }}
-                </td>
-
-            </tr>
-            @endforeach
-            </tbody>
-
-        </table>
         </div>
+
     </div>
     {{-- RINGKASAN --}}
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 mb-4">
@@ -275,7 +353,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const errorTunai  = document.getElementById('errorTunai');
     const errorStok   = document.getElementById('errorStok');
 
-    let currentTotal = parseInt(totalHidden.value) || 0;
+    let currentTotal = 0;
 
     // ===============================
     // FORMAT RUPIAH
@@ -289,54 +367,60 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===============================
     function hitungUlangTotal() {
 
-        let total = 0;
-        let adaErrorStok = false;
+    let total = 0;
+    let adaErrorStok = false;
 
-        document.querySelectorAll('tr[data-row="detail"]').forEach(tr => {
+    document.querySelectorAll('[data-row="detail"]').forEach(tr => {
 
-            console.log('STOK:', tr.dataset.stok);
+        // 🔥 FIX UTAMA: hanya hitung yang terlihat
+        if (tr.offsetParent === null) return;
 
-            const harga = parseInt(tr.dataset.harga || 0);
-            const stok  = parseInt(tr.dataset.stok || 0);
-            const qtyInput = tr.querySelector('.qty-input');
-            const warning  = tr.querySelector('.stok-warning');
-            const subtotalCell = tr.querySelector('.subtotal-cell');
+        const harga = parseInt(tr.dataset.harga || 0);
+        const stok  = parseInt(tr.dataset.stok || 0);
+        const qtyInput = tr.querySelector('.qty-input');
+        const warning  = tr.querySelector('.stok-warning');
+        const subtotalCell = tr.querySelector('.subtotal-cell');
 
-            if (!qtyInput) return;
+        if (!qtyInput) return;
 
-            let qty = parseInt(qtyInput.value);
+        let qty = parseInt(qtyInput.value);
 
-            // VALIDASI MINIMAL
-            if (isNaN(qty) || qty < 1) qty = 1;
+        // VALIDASI MINIMAL
+        if (isNaN(qty) || qty < 1) qty = 1;
 
-            // STOK HABIS
-            if (stok <= 0) {
-                qty = 0;
-                adaErrorStok = true;
+        // STOK HABIS
+        if (stok <= 0) {
+            qty = 0;
+            adaErrorStok = true;
 
-                if (warning) {
-                    warning.textContent = 'Stok habis';
-                    warning.classList.remove('hidden');
-                }
+            if (warning) {
+                warning.textContent = 'Stok habis';
+                warning.classList.remove('hidden');
             }
+        }
 
-            // HITUNG SUBTOTAL
-            const subtotal = harga * qty;
-            total += subtotal;
+        // HITUNG SUBTOTAL
+        const subtotal = harga * qty;
+        total += subtotal;
 
-            if (subtotalCell) {
-                subtotalCell.textContent = format(subtotal);
-            }
+        if (subtotalCell) {
+            subtotalCell.textContent = format(subtotal);
+        }
 
-            // DISABLE BUTTON
-            const btnPlus = tr.querySelector('.btn-plus');
-            const btnMinus = tr.querySelector('.btn-minus');
+        // BUTTON CONTROL
+        const btnPlus = tr.querySelector('.btn-plus');
+        const btnMinus = tr.querySelector('.btn-minus');
 
-            if (btnPlus) btnPlus.disabled = false;
-            if (btnMinus) btnMinus.disabled = qty <= 1;
-        });
+        if (btnPlus) {
+            btnPlus.classList.toggle('opacity-50', qty >= stok);
+        }
 
-        currentTotal = total;
+        if (btnMinus) {
+            btnMinus.disabled = qty <= 1;
+        }
+    });
+
+    currentTotal = total;
 
         document.getElementById('totalText').textContent = format(total);
         totalHidden.value = total;
@@ -352,20 +436,19 @@ document.addEventListener('DOMContentLoaded', () => {
         errorStok?.classList.add('hidden');
     }
 
-    // ===============================
-    // HITUNG KEMBALIAN
-    // ===============================
-    function updateKembali() {
+        function updateKembali() {
 
-        let bayar = parseInt(inputBayar.value || 0);
+        if (!inputBayar || !kembaliText) return;
 
-        if (isNaN(bayar) || bayar < 0) bayar = 0;
+        const bayar = parseInt(inputBayar.value) || 0;
+        const totalNow = parseInt(totalHidden.value) || 0;
 
-        const kembali = bayar - currentTotal;
+        const kembali = bayar - totalNow;
 
-        kembaliText.textContent = kembali > 0 ? format(kembali) : 'Rp 0';
+        kembaliText.textContent = kembali > 0 
+            ? format(kembali) 
+            : 'Rp 0';
     }
-
     // ===============================
     // TOGGLE METODE
     // ===============================
@@ -411,54 +494,63 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!btnPlus && !btnMinus) return;
 
-        const tr = e.target.closest('tr[data-row="detail"]');
-        if (!tr) return;
+        const row = e.target.closest('[data-row="detail"], .cart-row');
+        if (!row) return;
 
-        const qtyInput = tr.querySelector('.qty-input');
+        const qtyInput = row.querySelector('.qty-input');
+        const warning  = row.querySelector('.stok-warning');
 
-        let qty = parseInt(qtyInput.value || 0);
+        let qty  = parseInt(qtyInput.value || 0);
+        let stok = parseInt(row.dataset.stok || 0);
 
+        if (isNaN(qty) || qty < 1) qty = 1;
+
+        let showWarning = false;
+
+        // ➕ TAMBAH
         if (btnPlus) {
-            const stok = parseInt(tr.dataset.stok || 0);
 
-            if (qty >= stok) {
+            if (stok <= 0) {
+                showWarning = true;
 
-                const warning = tr.querySelector('.stok-warning');
+            } else if (qty >= stok) {
+                showWarning = true;
 
-                if (warning) {
-                    warning.textContent = 'Jumlah tidak bisa melebihi stok';
-                    warning.classList.remove('hidden');
-                }
-
-                return; // ❗ STOP, jangan tambah qty
+            } else {
+                qty++;
             }
-
-            qtyInput.value = qty + 1;
-
-            // hilangkan warning kalau valid
-            const warning = tr.querySelector('.stok-warning');
-            warning?.classList.add('hidden');
-
-            hitungUlangTotal();
-            return;
         }
 
+        // ➖ KURANG
         if (btnMinus) {
             qty--;
-
-            const stok = parseInt(tr.dataset.stok || 0);
-            const warning = tr.querySelector('.stok-warning');
-
-            qtyInput.value = qty;
-
-            // 🔥 HILANGKAN WARNING JIKA SUDAH VALID
-            if (qty <= stok) {
-                warning?.classList.add('hidden');
-            }
-
-            hitungUlangTotal();
+            if (qty < 1) qty = 1;
         }
-        
+
+        // VALIDASI FINAL
+        if (qty > stok) {
+            qty = stok;
+            showWarning = true;
+        }
+
+        qtyInput.value = qty;
+
+        // UPDATE WARNING
+        if (warning) {
+            if (showWarning) {
+                warning.textContent = stok <= 0 
+                    ? 'Stok habis' 
+                    : 'Jumlah tidak bisa melebihi stok';
+
+                warning.classList.remove('hidden');
+            } else {
+                warning.classList.add('hidden');
+            }
+        }
+
+        // HITUNG ULANG
+        hitungUlangTotal();
+
     });
 
     // ===============================
@@ -475,8 +567,10 @@ document.addEventListener('DOMContentLoaded', () => {
         updateKembali();
 
         let bayar = parseInt(inputBayar.value || 0);
+    
+        const totalNow = parseInt(totalHidden.value) || 0;
 
-        if (isNaN(bayar) || bayar < currentTotal) {
+        if (isNaN(bayar) || bayar < totalNow) {
             errorTunai.classList.remove('hidden');
             inputBayar.classList.add('border-red-500');
         } else {
@@ -495,7 +589,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let adaErrorStok = false;
 
-        document.querySelectorAll('tr[data-row="detail"]').forEach(tr => {
+        document.querySelectorAll('[data-row="detail"], .cart-row').forEach(tr => {
             const qty = parseInt(tr.querySelector('.qty-input')?.value || 0);
             const stok = parseInt(tr.dataset.stok || 0);
 
@@ -525,14 +619,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (action === 'pay' && metode === 'tunai') {
 
             let bayar = parseInt(inputBayar.value || 0);
+            const totalNow = parseInt(totalHidden.value) || 0;
 
-            if (isNaN(bayar) || bayar < currentTotal) {
+            if (isNaN(bayar) || bayar < totalNow) {
 
                 e.preventDefault();
 
                 errorTunai.classList.remove('hidden');
                 inputBayar.classList.add('border-red-500');
-                return; // 🔥 FIX BUG
+                return;
             }
         }
 
@@ -553,8 +648,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const loadingOverlay = document.getElementById('loadingOverlay');
 
-        if (metode === 'tunai') {
+        if (action === 'pay' && metode === 'tunai') {
             loadingOverlay.classList.remove('hidden');
+        
         }
     });
 

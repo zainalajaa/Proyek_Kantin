@@ -24,6 +24,11 @@
               class="px-6 py-5 space-y-4">
             @csrf
 
+            {{-- Info wajib --}}
+            <p class="text-xs text-gray-400">
+                <span class="text-red-500">*</span> wajib diisi
+            </p>
+
             {{-- Error --}}
             @if ($errors->any())
                 <div class="bg-red-100 text-red-700 text-xs px-4 py-2 rounded-lg">
@@ -36,27 +41,37 @@
             @endif
 
             {{-- Nama Produk --}}
-            <div>
-                <label class="block text-xs text-gray-600 mb-1">Nama Produk</label>
+            <div class="space-y-1">
+                <label class="block text-xs font-medium text-gray-600">
+                    Nama Produk <span class="text-red-500">*</span>
+                </label>
                 <input type="text"
-                       name="nama_produk"
-                       value="{{ old('nama_produk') }}"
-                       class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-[#009688] focus:border-[#009688]"
-                       required>
+                    name="nama_produk"
+                    required
+                    oninvalid="this.setCustomValidity('Nama produk wajib diisi')"
+                    oninput="this.setCustomValidity('')"
+                    class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm
+                        focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500
+                        transition duration-200">
             </div>
 
             {{-- Kategori --}}
-            <div>
-                <label class="block text-xs text-gray-600 mb-1">Kategori</label>
+            <div class="space-y-1">
+                <label class="block text-xs font-medium text-gray-600">
+                    Kategori <span class="text-red-500">*</span>
+                </label>
                 <select name="kategori_id"
-                        class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-[#009688] focus:border-[#009688]"
-                        required>
+                    required
+                    oninvalid="this.setCustomValidity('Kategori wajib dipilih')"
+                    oninput="this.setCustomValidity('')"
+                    class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm bg-white
+                        focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500
+                        transition duration-200">
 
                     <option value="">-- Pilih Kategori --</option>
 
                     @foreach($kategori as $k)
-                        <option value="{{ $k->id }}"
-                            {{ old('kategori_id') == $k->id ? 'selected' : '' }}>
+                        <option value="{{ $k->id }}">
                             {{ $k->nama_kategori }}
                         </option>
                     @endforeach
@@ -65,44 +80,59 @@
             </div>
 
             {{-- Stok --}}
-            <div>
-                <label class="block text-xs text-gray-600 mb-1">Stok</label>
+            <div class="space-y-1">
+                <label class="block text-xs font-medium text-gray-600">
+                    Stok <span class="text-red-500">*</span>
+                </label>
                 <input type="number"
-                       name="stok"
-                       min="0"
-                       value="{{ old('stok', 0) }}"
-                       class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-[#009688] focus:border-[#009688]"
-                       required>
+                    name="stok"
+                    required
+                    oninvalid="this.setCustomValidity('Stok wajib diisi')"
+                    oninput="this.setCustomValidity('')"
+                    class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm
+                        focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500
+                        transition duration-200">
             </div>
 
             {{-- Harga --}}
-            <div>
-                <label class="block text-xs text-gray-600 mb-1">Harga (Rp)</label>
+            <div class="space-y-1">
+                <label class="block text-xs font-medium text-gray-600">
+                    Harga (Rp) <span class="text-red-500">*</span>
+                </label>
                 <input type="number"
-                       name="harga"
-                       min="0"
-                       value="{{ old('harga', 0) }}"
-                       class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-[#009688] focus:border-[#009688]"
-                       required>
+                    name="harga"
+                    required
+                    oninvalid="this.setCustomValidity('Harga wajib diisi')"
+                    oninput="this.setCustomValidity('')"
+                    class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm
+                        focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500
+                        transition duration-200">
 
-                <p class="text-[11px] text-gray-400 mt-1">
+                <p class="text-[11px] text-gray-400">
                     Masukkan angka tanpa titik/koma. Contoh: 3000
                 </p>
             </div>
 
             {{-- Gambar --}}
-            <div>
-                <label class="block text-xs text-gray-600 mb-1">Gambar Produk</label>
-                <input type="file"
-                       name="gambar_produk"
-                       accept="image/*"
-                       class="w-full border rounded-lg px-3 py-2 text-sm bg-white">
+            <div class="space-y-2">
+                <label class="block text-xs font-medium text-gray-600">
+                    Gambar Produk <span class="text-red-500">*</span>
+                </label>
 
-                <p class="text-[11px] text-gray-400 mt-1">
+                <input type="file"
+                    name="gambar_produk"
+                    required
+                    oninvalid="this.setCustomValidity('Gambar wajib diupload')"
+                    oninput="this.setCustomValidity('')"
+                    class="w-full text-sm border border-gray-300 rounded-xl file:mr-3 file:py-2 file:px-4
+                        file:rounded-lg file:border-0 file:text-sm file:font-medium
+                        file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100
+                        cursor-pointer">
+
+                <p class="text-[11px] text-gray-400">
                     Format: JPG, JPEG, PNG. Maks 2MB.
                 </p>
             </div>
-
             {{-- Footer --}}
             <div class="flex justify-end gap-2 pt-4 border-t mt-2">
                 <a href="{{ route('admin.produk.lihat') }}"

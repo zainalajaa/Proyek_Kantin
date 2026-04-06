@@ -100,7 +100,7 @@
         </p>
 
     </div>
-</div>v>
+</div>
 </div>
 
 @endsection

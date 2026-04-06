@@ -16,7 +16,6 @@
             $cartTotal = session('cart_total', 0);
         @endphp
 
-
         @if (empty($cartItems))
 
             <div class="bg-white rounded-3xl shadow-sm p-10 text-center">
@@ -52,8 +51,19 @@
                                     {{ $item['nama_produk'] }}
                                 </div>
 
-                                <div class="text-sm text-slate-500 mt-1">
-                                    Rp {{ number_format($item['harga_satuan'], 0, ',', '.') }}
+                                <div class="text-sm text-slate-500 mt-1 space-y-1">
+                                    <div>
+                                        Rp {{ number_format($item['harga_satuan'], 0, ',', '.') }}
+                                    </div>
+
+                                    <div class="text-xs text-slate-400">
+                                        Stok:
+                                        @if(($item['stok'] ?? 0) <= 0)
+                                            <span class="text-red-500 font-semibold">Habis</span>
+                                        @else
+                                            {{ $item['stok'] }}
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
                         </label>
@@ -104,18 +114,18 @@
                 @endforeach
             </div>
 
-
             {{-- ================= DESKTOP VIEW ================= --}}
             <div class="hidden md:block overflow-x-auto desktop-view">
 
-                <table class="w-full text-sm">
-                    <thead class="border-b text-slate-500">
+                <table class="w-full text-sm table-fixed">
+                    <thead class="border-b bg-slate-50 text-slate-600 text-xs uppercase tracking-wide">
                         <tr>
-                            <th class="py-4 text-left">Produk</th>
-                            <th class="py-4 text-right">Harga</th>
-                            <th class="py-4 text-center">Jumlah</th>
-                            <th class="py-4 text-right">Subtotal</th>
-                            <th class="py-4 text-center">✕</th>
+                            <th class="py-4 text-left pl-6 w-[30%]">Produk</th>
+                            <th class="py-4 text-right px-6 w-[15%]">Harga</th>
+                            <th class="py-4 text-center px-6 w-[10%]">Stok</th>
+                            <th class="py-4 text-center px-6 w-[20%]">Jumlah</th>
+                            <th class="py-4 text-right px-6 w-[15%]">Subtotal</th>
+                            <th class="py-4 text-center pr-6 w-[10%]">Aksi</th>
                         </tr>
                     </thead>
 
@@ -126,53 +136,76 @@
                         data-harga="{{ (int) $item['harga_satuan'] }}"
                         data-stok="{{ (int) ($item['stok'] ?? 1) }}">
 
-                        <td class="py-5 text-slate-800">
+                        <!-- PRODUK -->
+                        <td class="py-5 pl-6">
                             <label class="flex items-center gap-3">
                                 <input type="checkbox"
-                                       name="items[{{ $key }}][checked]"
-                                       class="item-check accent-emerald-500">
-                                {{ $item['nama_produk'] }}
+                                    name="items[{{ $key }}][checked]"
+                                    class="item-check accent-emerald-500">
+
+                                <span class="font-medium text-slate-700">
+                                    {{ $item['nama_produk'] }}
+                                </span>
                             </label>
                         </td>
 
-                        <td class="py-5 text-right text-slate-600 whitespace-nowrap">
+                        <!-- HARGA -->
+                        <td class="py-5 text-right px-6 text-slate-600 font-medium whitespace-nowrap">
                             Rp {{ number_format($item['harga_satuan'], 0, ',', '.') }}
                         </td>
 
-                        <td class="py-5 text-center">
-                        <div class="inline-flex items-center border border-slate-200 rounded-xl overflow-hidden">
+                        <!-- STOK -->
+                        <td class="py-5 text-center px-6">
+                            @if(($item['stok'] ?? 0) <= 0)
+                                <span class="bg-red-100 text-red-600 text-xs px-2 py-1 rounded-lg font-semibold">
+                                    Habis
+                                </span>
+                            @else
+                                <span class="text-slate-600 font-medium">
+                                    {{ $item['stok'] }}
+                                </span>
+                            @endif
+                        </td>
 
-                            <button type="button"
-                                class="btn-minus px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-sm">
-                                −
-                            </button>
+                        <!-- JUMLAH -->
+                        <td class="py-5 text-center px-6">
+                            <div class="flex justify-center">
+                                <div class="inline-flex items-center border border-slate-200 rounded-xl overflow-hidden shadow-sm">
 
-                            <input type="number"
-                                name="items[{{ $key }}][jumlah]"
-                                value="{{ $item['jumlah'] }}"
-                                min="1"
-                                max="{{ $item['stok'] ?? 1 }}"
-                                readonly
-                                class="qty-input w-12 text-center text-sm outline-none bg-white cursor-default">
+                                    <button type="button"
+                                        class="btn-minus px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-sm transition">
+                                        −
+                                    </button>
 
-                            <button type="button"
-                                class="btn-plus px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-sm">
-                                +
-                            </button>
-                        </div>
+                                    <input type="number"
+                                        name="items[{{ $key }}][jumlah]"
+                                        value="{{ $item['jumlah'] }}"
+                                        min="1"
+                                        max="{{ $item['stok'] ?? 1 }}"
+                                        readonly
+                                        class="qty-input w-12 text-center text-sm outline-none bg-white">
 
-                        <!-- 🔥 PINDAH KE SINI -->
-                        <p class="stok-warning text-red-600 text-xs mt-2 hidden font-medium">
-                            Jumlah melebihi stok tersedia
-                        </p>
+                                    <button type="button"
+                                        class="btn-plus px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-sm transition">
+                                        +
+                                    </button>
+                                </div>
+                            </div>
 
-                        <td class="subtotal-cell py-5 text-right font-semibold text-emerald-600 whitespace-nowrap">
+                            <p class="stok-warning text-red-500 text-xs mt-2 hidden font-medium">
+                                Melebihi stok
+                            </p>
+                        </td>
+
+                        <!-- SUBTOTAL -->
+                        <td class="subtotal-cell py-5 text-right px-6 font-bold text-emerald-600 whitespace-nowrap">
                             Rp {{ number_format($item['subtotal'], 0, ',', '.') }}
                         </td>
 
-                        <td class="py-5 text-center">
+                        <!-- AKSI -->
+                        <td class="py-5 text-center pr-6">
                             <button type="button"
-                                    class="btn-remove text-xs font-medium text-red-500 hover:text-red-600 transition">
+                                    class="btn-remove text-xs font-semibold text-red-500 hover:text-red-600 transition">
                                 Hapus
                             </button>
                         </td>
@@ -184,8 +217,7 @@
 
             </div>
 
-
-            {{-- FOOTER SUMMARY --}}
+            {{-- FOOTER --}}
             <div class="mt-10 pt-8 border-t">
 
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
@@ -196,10 +228,6 @@
                         <input type="hidden" name="total_checkout" id="totalCheckout" value="0">
                     </div>
 
-                    <p id="checkout-warning" class="text-red-500 text-sm mb-3 hidden">
-                        Pilih minimal satu produk untuk dibayar.
-                    </p>
-                    
                     <button type="submit"
                             class="bg-emerald-500 text-white px-10 py-3 rounded-2xl font-semibold hover:bg-emerald-600 transition shadow-sm">
                         Lanjutkan Pembayaran
@@ -246,7 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnBayar    = document.getElementById('btnBayar');
     const errorTunai  = document.getElementById('errorTunai');
 
-    let currentTotal = parseInt(totalHidden.value) || 0;
+    let currentTotal = 0;
 
     // ===============================
     // FORMAT
@@ -261,7 +289,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let total = 0;
 
-        document.querySelectorAll('.cart-row:not([style*="display: none"])').forEach(tr => {
+        document.querySelectorAll('.cart-row').forEach(tr => {
+
+            // 🔥 FIX UTAMA
+            if (tr.offsetParent === null) return;
 
             const harga = parseInt(tr.dataset.harga) || 0;
 
@@ -289,7 +320,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const subtotal = harga * qty;
 
-            // 🔥 FIX TOTAL BERDASARKAN CHECKBOX
+            // ✔ hanya yang dicentang
             const checkbox = tr.querySelector('.item-check');
             if (checkbox && checkbox.checked) {
                 total += subtotal;
@@ -380,7 +411,7 @@ formTunai.addEventListener('click', function(e) {
 
         tr.style.display = 'none';
 
-        const rows = document.querySelectorAll('.cart-row:not([style*="display: none"])');
+        const rows = Array.from(document.querySelectorAll('.cart-row')) .filter(el => el.offsetParent !== null);
 
         if (rows.length === 0) {
             document.querySelector('table')?.style.setProperty('display', 'none');

@@ -12,18 +12,58 @@ use App\Models\PenjualanDetail;
 class CheckoutController extends Controller
 {
     /**
-     * Tampilkan halaman keranjang
+     * ===============================
+     * TAMPILKAN HALAMAN KERANJANG
+     * ===============================
      */
     public function index()
     {
-        $cartItems = Session::get('cartItems', []);
-        $cartTotal = Session::get('cart_total', 0);
+        $cart = Session::get('cartItems', []);
 
-        return view('publik.cart', compact('cartItems', 'cartTotal'));
+        $updatedCart = [];
+        $cartTotal = 0;
+
+        foreach ($cart as $key => $item) {
+
+            $produk = Produk::where('id_produk', $item['id_produk'])->first();
+
+            if (!$produk) continue;
+
+            // 🔥 AMBIL STOK TERBARU DARI DB
+            $stok = (int) $produk->stok;
+
+            // 🔥 SESUAIKAN QTY (jika stok berubah)
+            $qty = min($item['jumlah'], $stok);
+
+            $subtotal = $produk->harga * $qty;
+
+            $updatedCart[$key] = [
+                'id_produk'    => $produk->id_produk,
+                'nama_produk'  => $produk->nama_produk,
+                'harga_satuan' => (int) $produk->harga,
+                'jumlah'       => $qty,
+                'subtotal'     => $subtotal,
+                'stok'         => $stok, // 🔥 FIX UTAMA
+            ];
+
+            $cartTotal += $subtotal;
+        }
+
+        // 🔥 UPDATE SESSION BIAR SELALU VALID
+        Session::put('cartItems', $updatedCart);
+        Session::put('cart_total', $cartTotal);
+        Session::put('cart_count', count($updatedCart));
+
+        return view('publik.cart', [
+            'cartItems' => $updatedCart,
+            'cartTotal' => $cartTotal
+        ]);
     }
 
     /**
-     * Tambah ke keranjang
+     * ===============================
+     * TAMBAH KE KERANJANG
+     * ===============================
      */
     public function add(Request $request, $id)
     {
@@ -32,15 +72,13 @@ class CheckoutController extends Controller
         $cart = Session::get('cartItems', []);
         $key  = $produk->id_produk;
 
-        // qty input
         $qty = max((int) $request->input('qty', 1), 1);
 
-        // 🔥 VALIDASI STOK AWAL
+        // 🔥 VALIDASI STOK
         if ($qty > $produk->stok) {
             return back()->with('error', 'Jumlah melebihi stok tersedia.');
         }
 
-        // jika belum ada di cart
         if (!isset($cart[$key])) {
             $cart[$key] = [
                 'id_produk'    => $produk->id_produk,
@@ -48,22 +86,19 @@ class CheckoutController extends Controller
                 'harga_satuan' => (int) $produk->harga,
                 'jumlah'       => 0,
                 'subtotal'     => 0,
-                'stok'         => $produk->stok,
+                // ❌ stok tidak disimpan di sini
             ];
         }
 
-        // cek total qty di cart
         $currentQty = $cart[$key]['jumlah'];
 
         if (($currentQty + $qty) > $produk->stok) {
             return back()->with('error', 'Total jumlah di keranjang melebihi stok.');
         }
 
-        // update cart
         $cart[$key]['jumlah']  += $qty;
         $cart[$key]['subtotal'] = $cart[$key]['jumlah'] * $cart[$key]['harga_satuan'];
 
-        // hitung ulang
         $cart_total = collect($cart)->sum('subtotal');
         $cart_count = count($cart);
 
@@ -75,7 +110,9 @@ class CheckoutController extends Controller
     }
 
     /**
-     * Checkout produk terpilih
+     * ===============================
+     * CHECKOUT PRODUK TERPILIH
+     * ===============================
      */
     public function checkout(Request $request)
     {
@@ -97,16 +134,13 @@ class CheckoutController extends Controller
 
             $row = $itemsInput[$key] ?? null;
 
-            // jika tidak dicentang
             if (!$row) {
                 $newCart[$key] = $item;
                 continue;
             }
 
-            // ambil qty terbaru
             $qty = max((int)($row['jumlah'] ?? $item['jumlah']), 1);
 
-            // ambil produk terbaru dari DB
             $produk = Produk::where('id_produk', $item['id_produk'])->first();
 
             // 🔥 VALIDASI STOK REALTIME
@@ -124,7 +158,7 @@ class CheckoutController extends Controller
                 'harga_satuan' => $item['harga_satuan'],
                 'jumlah'       => $qty,
                 'subtotal'     => $item['harga_satuan'] * $qty,
-                'stok'         => $produk->stok, // 🔥 WAJIB
+                'stok'         => $produk->stok, // tetap ada untuk tampilan checkout
             ];
 
             if ($isChecked) {
@@ -135,7 +169,6 @@ class CheckoutController extends Controller
             }
         }
 
-        // update sisa cart
         Session::put('cartItems', $newCart);
         Session::put('cart_total', collect($newCart)->sum('subtotal'));
         Session::put('cart_count', count($newCart));
@@ -160,7 +193,6 @@ class CheckoutController extends Controller
 
                 $produk = Produk::where('id_produk', $item['id_produk'])->first();
 
-                // 🔥 VALIDASI FINAL (double safety)
                 if ($produk->stok < $item['jumlah']) {
                     throw new \Exception('Stok berubah, silakan ulangi transaksi.');
                 }
@@ -191,7 +223,9 @@ class CheckoutController extends Controller
     }
 
     /**
-     * Hapus item dari keranjang
+     * ===============================
+     * HAPUS ITEM
+     * ===============================
      */
     public function remove(Request $request)
     {
