@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use Illuminate\Http\Request;
 use App\Models\Penjualan;
 use App\Models\Produk;
 use Illuminate\Support\Facades\DB;
@@ -37,46 +37,38 @@ class PembayaranPublikController extends Controller
     // ==============================
     // KONFIRMASI QRIS
     // ==============================
-    public function submitQris($id)
+   public function submitQris(Request $request, $id)
     {
         DB::beginTransaction();
 
         try {
 
+            // VALIDASI FILE
+            $request->validate([
+                'payment_proof' => 'required|image|mimes:jpg,jpeg,png|max:2048'
+            ]);
+
             $penjualan = Penjualan::with('details')
                 ->lockForUpdate()
                 ->findOrFail($id);
 
-            // HITUNG TOTAL REAL DARI DETAIL
+            // HITUNG TOTAL
             $totalReal = $penjualan->details->sum(function ($detail) {
                 return $detail->jumlah * $detail->harga_satuan;
             });
 
-            // VALIDASI STOK SEBELUM DIKURANGI
-            foreach ($penjualan->details as $detail) {
+            // 🔥 SIMPAN FILE (INI YANG PALING PENTING)
+            $path = $request->file('payment_proof')
+                ->store('bukti_pembayaran', 'public');
 
-                $produk = Produk::where('id_produk', $detail->id_produk)
-                    ->lockForUpdate()
-                    ->firstOrFail();
-
-                if ($produk->stok < $detail->jumlah) {
-                    throw new \Exception("Stok {$produk->nama_produk} tidak mencukupi.");
-                }
-            }
-
-            // KURANGI STOK
-            foreach ($penjualan->details as $detail) {
-                Produk::where('id_produk', $detail->id_produk)
-                    ->decrement('stok', $detail->jumlah);
-            }
-
-            // UPDATE PENJUALAN (FINAL STATE)
+            // 🔥 UPDATE PENJUALAN
             $penjualan->update([
                 'total_harga'       => $totalReal,
                 'metode_pembayaran' => 'qris',
-                'paid_amount'       => $totalReal,
-                'paid_at'           => now(),
-                'status'            => 'sukses',
+                'bukti_pembayaran'  => $path,
+                'paid_amount'       => $totalReal, // 🔥 isi seperti tunai
+                'paid_at'           => now(),      // 🔥 isi waktu bayar
+                'status'            => 'sukses',   // 🔥 langsung sukses
             ]);
 
             DB::commit();
@@ -88,10 +80,9 @@ class PembayaranPublikController extends Controller
             DB::rollBack();
             report($e);
 
-            return back()->with('error', 'Terjadi kesalahan saat memproses pembayaran QRIS.');
+            return back()->with('error', 'Gagal upload bukti pembayaran');
         }
     }
-
     // ==============================
     // HALAMAN TRANSAKSI SELESAI
     // ==============================

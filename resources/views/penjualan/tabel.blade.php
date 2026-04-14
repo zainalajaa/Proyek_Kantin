@@ -15,22 +15,16 @@
             </p>
         </div>
 
-        <!-- FILTER DROPDOWN -->
+        <!-- FILTER -->
         <form method="GET" action="{{ route('admin.penjualan.index') }}">
             <select name="filter"
                 onchange="this.form.submit()"
                 class="text-sm border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500">
 
                 <option value="">Semua Periode</option>
-                <option value="harian" {{ request('filter') == 'harian' ? 'selected' : '' }}>
-                    Harian
-                </option>
-                <option value="mingguan" {{ request('filter') == 'mingguan' ? 'selected' : '' }}>
-                    Mingguan
-                </option>
-                <option value="bulanan" {{ request('filter') == 'bulanan' ? 'selected' : '' }}>
-                    Bulanan
-                </option>
+                <option value="harian" {{ request('filter') == 'harian' ? 'selected' : '' }}>Harian</option>
+                <option value="mingguan" {{ request('filter') == 'mingguan' ? 'selected' : '' }}>Mingguan</option>
+                <option value="bulanan" {{ request('filter') == 'bulanan' ? 'selected' : '' }}>Bulanan</option>
             </select>
         </form>
 
@@ -43,10 +37,14 @@
                 <tr class="text-xs uppercase tracking-wider text-gray-500">
                     <th class="px-4 py-3 text-left">No</th>
                     <th class="px-4 py-3 text-left">Waktu</th>
-                    <th class="px-4 py-3 text-left">Metode</th>
+
+                    <th class="px-4 py-3 text-left hidden md:table-cell">Metode</th>
+                    <th class="px-4 py-3 text-left">Bukti</th>
+
                     <th class="px-4 py-3 text-right">Total</th>
-                    <th class="px-4 py-3 text-right">Dibayar</th>
-                    <th class="px-4 py-3 text-left">Paid At</th>
+                    <th class="px-4 py-3 text-right hidden md:table-cell">Dibayar</th>
+                    <th class="px-4 py-3 text-left hidden md:table-cell">Paid At</th>
+
                     <th class="px-4 py-3 text-center">Status</th>
                     <th class="px-4 py-3 text-center">Aksi</th>
                 </tr>
@@ -56,34 +54,71 @@
                 @forelse($penjualan as $p)
                 <tr class="bg-white shadow-sm hover:shadow-md transition rounded-lg">
 
+                    <!-- NO -->
                     <td class="px-4 py-4">
                         {{ $penjualan->firstItem() + $loop->index }}
                     </td>
 
+                    <!-- WAKTU -->
                     <td class="px-4 py-4 text-gray-600 whitespace-nowrap">
                         {{ \Carbon\Carbon::parse($p->waktu)->format('d M Y, H:i') }}
                     </td>
 
-                    <td class="px-4 py-4 capitalize font-medium">
+                    <!-- METODE (HIDDEN MOBILE) -->
+                    <td class="px-4 py-4 capitalize font-medium hidden md:table-cell">
                         {{ $p->metode_pembayaran ?? '-' }}
                     </td>
 
-                    <td class="px-4 py-4 text-right font-semibold">
-                        Rp {{ number_format($p->total_harga, 0, ',', '.') }}
+                    <!-- BUKTI QRIS -->
+                    <td class="px-4 py-4 text-center">
+                        @if($p->metode_pembayaran === 'qris')
+                            
+                            @if($p->bukti_pembayaran)
+                                <a href="{{ asset('storage/' . $p->bukti_pembayaran) }}" target="_blank">
+                                    <img 
+                                        src="{{ asset('storage/' . $p->bukti_pembayaran) }}" 
+                                        class="w-10 h-10 md:w-12 md:h-12 object-cover rounded-md border hover:scale-110 transition"
+                                    >
+                                </a>
+                            @else
+                                <span class="text-xs text-red-500">
+                                    Belum upload
+                                </span>
+                            @endif
+
+                        @else
+                            <span class="text-xs text-gray-400">-</span>
+                        @endif
                     </td>
 
-                    <td class="px-4 py-4 text-right text-gray-700">
-                        {{ $p->paid_amount 
-                            ? 'Rp ' . number_format($p->paid_amount, 0, ',', '.') 
-                            : '-' }}
+                    <!-- TOTAL -->
+                    <td class="px-4 py-4 text-right font-semibold whitespace-nowrap">
+                        <div class="flex justify-end gap-1">
+                            <span>Rp</span>
+                            <span class="tabular-nums">
+                                {{ number_format($p->total_harga, 0, ',', '.') }}
+                            </span>
+                        </div>
                     </td>
 
-                    <td class="px-4 py-4 text-gray-500 whitespace-nowrap">
+                    <!-- DIBAYAR (HIDDEN MOBILE) -->
+                    <td class="px-4 py-4 text-right hidden md:table-cell whitespace-nowrap">
+                        <div class="flex justify-end gap-1">
+                            <span>Rp</span>
+                            <span class="tabular-nums">
+                                {{ number_format($p->paid_amount, 0, ',', '.') }}
+                            </span>
+                        </div>
+                    </td>
+
+                    <!-- PAID AT (HIDDEN MOBILE) -->
+                    <td class="px-4 py-4 text-gray-500 whitespace-nowrap hidden md:table-cell">
                         {{ $p->paid_at 
                             ? \Carbon\Carbon::parse($p->paid_at)->format('d M Y, H:i') 
                             : '-' }}
                     </td>
 
+                    <!-- STATUS -->
                     <td class="px-4 py-4 text-center">
                         @if($p->status === 'sukses')
                             <span class="px-3 py-1 text-xs font-medium rounded-full bg-emerald-100 text-emerald-700">
@@ -102,9 +137,10 @@
                         @endif
                     </td>
 
+                    <!-- AKSI -->
                     <td class="px-4 py-4 text-center">
                         <a href="{{ route('admin.penjualan.show', $p->id) }}"
-                           class="inline-block px-4 py-1.5 text-xs font-medium rounded-md bg-blue-600 text-white hover:bg-blue-500 transition">
+                           class="inline-block px-3 py-1.5 text-xs font-medium rounded-md bg-blue-600 text-white hover:bg-blue-500 transition">
                             Detail
                         </a>
                     </td>
@@ -112,7 +148,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="8" class="px-4 py-6 text-center text-gray-500">
+                    <td colspan="9" class="px-4 py-6 text-center text-gray-500">
                         Belum ada transaksi.
                     </td>
                 </tr>

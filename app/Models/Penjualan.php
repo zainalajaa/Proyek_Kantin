@@ -18,6 +18,13 @@ class Penjualan extends Model
         'status',
         'paid_amount',
         'paid_at',
+        'bukti_pembayaran', // 🔥 WAJIB DITAMBAHKAN
+    ];
+
+    // 🔥 OPTIONAL (RECOMMENDED)
+    protected $casts = [
+        'paid_at' => 'datetime',
+        'waktu'   => 'datetime',
     ];
 
     public function details()

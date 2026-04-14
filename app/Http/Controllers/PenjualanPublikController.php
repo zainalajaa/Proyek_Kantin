@@ -261,7 +261,7 @@ class PenjualanPublikController extends Controller
             }
 
             // =========================
-            // HITUNG TOTAL FINAL DARI DB
+            // HITUNG TOTAL FINAL
             // =========================
             $totalFinal = $penjualan->details()->sum('subtotal');
 
@@ -286,6 +286,7 @@ class PenjualanPublikController extends Controller
                     'paid_amount'       => $request->jumlah_bayar,
                     'paid_at'           => now(),
                     'status'            => 'sukses',
+                    // 🔥 tidak menyentuh bukti_pembayaran
                 ]);
 
             }
@@ -300,6 +301,8 @@ class PenjualanPublikController extends Controller
                     'paid_amount'       => null,
                     'paid_at'           => null,
                     'status'            => 'pending_qris',
+                    // 🔥 bukti_pembayaran DIKOSONGKAN SAAT MULAI QRIS
+                    'bukti_pembayaran'  => null,
                 ]);
             }
 
@@ -314,7 +317,10 @@ class PenjualanPublikController extends Controller
             DB::rollBack();
             report($e);
 
-            return back()->with('error', 'Pembelian produk melebihi stok yang tersedia, Periksa ketersedian stok dan lakukan pembayaran sesuai dengan jumlah produk yang tersedia.');
+            return back()->with(
+                'error',
+                'Pembelian produk melebihi stok atau terjadi kesalahan. Periksa kembali jumlah produk.'
+            );
         }
     }
 
